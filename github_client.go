@@ -18,12 +18,12 @@ type GithubCheckoutClient interface {
 	CheckoutTarball(*GithubCheckoutOptions) (CheckoutTarball, error)
 }
 
-type githubCheckoutClient struct {
-	*baseGitCheckoutClient
+func NewGithubCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) GithubCheckoutClient {
+	return &githubCheckoutClient{newBaseGitCheckoutClient(executorReadFileManagerProvider)}
 }
 
-func newGithubCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) *githubCheckoutClient {
-	return &githubCheckoutClient{newBaseGitCheckoutClient(executorReadFileManagerProvider)}
+type githubCheckoutClient struct {
+	*baseGitCheckoutClient
 }
 
 func (this *githubCheckoutClient) CheckoutTarball(githubCheckoutOptions *GithubCheckoutOptions) (CheckoutTarball, error) {
