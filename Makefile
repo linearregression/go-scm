@@ -22,8 +22,6 @@ doc:
 	go get -v github.com/robertkrimen/godocdown/godocdown
 	cp .readme.header README.md
 	godocdown | tail -n +7 >> README.md
-	#echo '## os' >> README.md
-	#godocdown ./os | tail -n +7 >> README.md
 
 clean:
 	go clean -i ./...
