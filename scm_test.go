@@ -75,7 +75,7 @@ func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarb
 	require.NoError(this.T(), err)
 	client, err := clientProvider.NewTempDirClient()
 	require.NoError(this.T(), err)
-	err = tarexec.NewUntarClient(client, nil).Untar(checkoutTarball, client.DirPath())
+	err = tarexec.NewUntarClient(client, nil).Untar(checkoutTarball, ".")
 	require.NoError(this.T(), err)
 	_, err = os.Stat(client.Join(client.DirPath(), "smartystreets.gemspec"))
 	require.NoError(this.T(), err)

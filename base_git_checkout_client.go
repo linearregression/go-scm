@@ -31,7 +31,7 @@ func (this *baseGitCheckoutClient) checkout(url string, branch string, commitId 
 	if err != nil {
 		return nil, err
 	}
-	fileList, err := client.ListRegularFiles(clonePath)
+	fileList, err := client.ListRegularFiles("clone")
 	if err != nil {
 		return nil, err
 	}

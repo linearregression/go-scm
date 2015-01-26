@@ -4,13 +4,13 @@
 
 ## Installation
 ```bash
-go get -u gopkg.in/peter-edge/scm.v1
+go get -u github.com/peter-edge/scm
 ```
 
 ## Import
 ```go
 import (
-    "gopkg.in/peter-edge/scm.v1"
+    "github.com/peter-edge/scm"
 )
 ```
 
