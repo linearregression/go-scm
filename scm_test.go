@@ -79,7 +79,7 @@ func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarb
 	require.NoError(this.T(), err)
 	_, err = os.Stat(client.Join(client.DirPath(), "smartystreets.gemspec"))
 	require.NoError(this.T(), err)
-	file, err := os.Open(client.Join(client.DirPath(), ".git/HEAD"))
+	file, err := os.Open(client.Join(client.DirPath(), ".git/refs/heads/master"))
 	require.NoError(this.T(), err)
 	defer file.Close()
 	data, err := ioutil.ReadAll(file)
@@ -87,4 +87,5 @@ func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarb
 	var buffer bytes.Buffer
 	buffer.Write(data)
 	require.Equal(this.T(), testSmartystreetsCommitId, strings.TrimSpace(buffer.String()))
+	require.NoError(this.T(), clientProvider.Destroy())
 }
