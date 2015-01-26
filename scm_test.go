@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	testSmartystreetsCommitId = "26edc5a1950af7102ab178cc87c7836ee748d003"
+	testSmartystreetsCommitId = "a40e854c17df0b1a98c90c250dc20e6cb2474dfa"
 )
 
 type Suite struct {

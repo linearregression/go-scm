@@ -31,6 +31,14 @@ func (this *baseGitCheckoutClient) checkout(url string, branch string, commitId 
 	if err != nil {
 		return nil, err
 	}
+	err = client.Execute(
+		&exec.Cmd{
+			Args: []string{"cd", "clone", "&&", "git", "checkout", "-qf", commitId},
+		},
+	)()
+	if err != nil {
+		return nil, err
+	}
 	fileList, err := client.ListRegularFiles("clone")
 	if err != nil {
 		return nil, err
