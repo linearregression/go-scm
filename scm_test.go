@@ -79,7 +79,7 @@ func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarb
 	require.NoError(this.T(), err)
 	_, err = os.Stat(client.Join(client.DirPath(), "smartystreets.gemspec"))
 	require.NoError(this.T(), err)
-	file, err := os.Open(client.Join(client.DirPath(), ".git/refs/heads/master"))
+	file, err := os.Open(client.Join(client.DirPath(), ".git/HEAD"))
 	require.NoError(this.T(), err)
 	defer file.Close()
 	data, err := ioutil.ReadAll(file)

@@ -7,6 +7,10 @@ import (
 	tarexec "github.com/peter-edge/tar/exec"
 )
 
+const (
+	clonePath = "clone"
+)
+
 type baseGitCheckoutClient struct {
 	exec.ExecutorReadFileManagerProvider
 }
@@ -21,34 +25,31 @@ func (this *baseGitCheckoutClient) checkout(url string, branch string, commitId 
 	if err != nil {
 		return nil, err
 	}
-	clonePath := client.Join(client.DirPath(), "clone")
-	err = client.Execute(
+	if err := client.Execute(
 		&exec.Cmd{
 			// TODO(peter): if the commit id is more than 50 back, the checkout will fail
 			Args: []string{"git", "clone", "--branch", branch, "--depth", "50", "--recursive", url, clonePath},
 		},
-	)()
-	if err != nil {
+	)(); err != nil {
 		return nil, err
 	}
-	err = client.Execute(
+	if err := client.Execute(
 		&exec.Cmd{
-			Args: []string{"cd", "clone", "&&", "git", "checkout", "-qf", commitId},
+			Args:   []string{"git", "checkout", "-f", commitId},
+			SubDir: clonePath,
 		},
-	)()
+	)(); err != nil {
+		return nil, err
+	}
+	fileList, err := client.ListRegularFiles(clonePath)
 	if err != nil {
 		return nil, err
 	}
-	fileList, err := client.ListRegularFiles("clone")
+	reader, err := tarexec.NewTarClient(client, nil).Tar(fileList, clonePath)
 	if err != nil {
 		return nil, err
 	}
-	reader, err := tarexec.NewTarClient(client, nil).Tar(fileList, "clone")
-	if err != nil {
-		return nil, err
-	}
-	err = client.Destroy()
-	if err != nil {
+	if err := client.Destroy(); err != nil {
 		return nil, err
 	}
 	return reader, nil
