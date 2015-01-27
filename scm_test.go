@@ -2,6 +2,7 @@ package scm
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -55,12 +56,12 @@ func (this *Suite) TestGitIgnore() {
 }
 
 func (this *Suite) testGit(ignoreCheckoutFiles bool) {
-	checkoutTarball, err := NewGitCheckoutClient(this.clientProvider).CheckoutTarball(
+	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+	checkoutTarball, err := client.CheckoutGitTarball(
 		&GitCheckoutOptions{
-			Url:                 "https://github.com/peter-edge/smartystreets.git",
-			Branch:              "master",
-			CommitId:            testSmartystreetsCommitId,
-			IgnoreCheckoutFiles: ignoreCheckoutFiles,
+			Url:      "https://github.com/peter-edge/smartystreets.git",
+			Branch:   "master",
+			CommitId: testSmartystreetsCommitId,
 		},
 	)
 	require.NoError(this.T(), err)
@@ -76,20 +77,20 @@ func (this *Suite) TestGithubIgnore() {
 }
 
 func (this *Suite) testGithub(ignoreCheckoutFiles bool) {
-	checkoutTarball, err := NewGithubCheckoutClient(this.clientProvider).CheckoutTarball(
+	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+	checkoutTarball, err := client.CheckoutGithubTarball(
 		&GithubCheckoutOptions{
-			User:                "peter-edge",
-			Repository:          "smartystreets_ruby",
-			Branch:              "master",
-			CommitId:            testSmartystreetsCommitId,
-			IgnoreCheckoutFiles: ignoreCheckoutFiles,
+			User:       "peter-edge",
+			Repository: "smartystreets_ruby",
+			Branch:     "master",
+			CommitId:   testSmartystreetsCommitId,
 		},
 	)
 	require.NoError(this.T(), err)
 	this.testSmartystreetsCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarball, ignoreCheckoutFiles bool) {
+func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
 	clientProvider, err := execos.NewClientProvider()
 	require.NoError(this.T(), err)
 	client, err := clientProvider.NewTempDirClient()
@@ -127,18 +128,18 @@ func (this *Suite) TestHgIgnore() {
 }
 
 func (this *Suite) testHg(ignoreCheckoutFiles bool) {
-	checkoutTarball, err := NewHgCheckoutClient(this.clientProvider).CheckoutTarball(
+	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+	checkoutTarball, err := client.CheckoutHgTarball(
 		&HgCheckoutOptions{
-			Url:                 "https://bitbucket.org/durin42/hg-git",
-			ChangesetId:         testHgGitChangesetId,
-			IgnoreCheckoutFiles: ignoreCheckoutFiles,
+			Url:         "https://bitbucket.org/durin42/hg-git",
+			ChangesetId: testHgGitChangesetId,
 		},
 	)
 	require.NoError(this.T(), err)
 	this.testHgGitCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) testHgGitCheckoutTarball(checkoutTarball CheckoutTarball, ignoreCheckoutFiles bool) {
+func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
 	clientProvider, err := execos.NewClientProvider()
 	require.NoError(this.T(), err)
 	client, err := clientProvider.NewTempDirClient()

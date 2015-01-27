@@ -22,87 +22,55 @@ var (
 )
 ```
 
-#### type CheckoutTarball
+#### type Client
 
 ```go
-type CheckoutTarball interface {
-	io.Reader
-	Branch() string
-	CommitId() string
+type Client interface {
+	CheckoutGitTarball(*GitCheckoutOptions) (io.Reader, error)
+	CheckoutGithubTarball(*GithubCheckoutOptions) (io.Reader, error)
+	CheckoutHgTarball(*HgCheckoutOptions) (io.Reader, error)
 }
 ```
 
 
-#### type GitCheckoutClient
+#### func  NewClient
 
 ```go
-type GitCheckoutClient interface {
-	CheckoutTarball(*GitCheckoutOptions) (CheckoutTarball, error)
+func NewClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider, clientOptions *ClientOptions) Client
+```
+
+#### type ClientOptions
+
+```go
+type ClientOptions struct {
+	IgnoreCheckoutFiles bool
 }
 ```
 
-
-#### func  NewGitCheckoutClient
-
-```go
-func NewGitCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) GitCheckoutClient
-```
 
 #### type GitCheckoutOptions
 
 ```go
 type GitCheckoutOptions struct {
-	Url                 string
-	Branch              string
-	CommitId            string
-	IgnoreCheckoutFiles bool
+	Url      string
+	Branch   string
+	CommitId string
 }
 ```
 
-
-#### type GithubCheckoutClient
-
-```go
-type GithubCheckoutClient interface {
-	CheckoutTarball(*GithubCheckoutOptions) (CheckoutTarball, error)
-}
-```
-
-
-#### func  NewGithubCheckoutClient
-
-```go
-func NewGithubCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) GithubCheckoutClient
-```
 
 #### type GithubCheckoutOptions
 
 ```go
 type GithubCheckoutOptions struct {
-	User                string
-	Repository          string
-	Branch              string
-	CommitId            string
-	IgnoreCheckoutFiles bool
-	AccessToken         string
+	User        string
+	Repository  string
+	Branch      string
+	CommitId    string
+	AccessToken string
 }
 ```
 
-
-#### type HgCheckoutClient
-
-```go
-type HgCheckoutClient interface {
-	CheckoutTarball(*HgCheckoutOptions) (CheckoutTarball, error)
-}
-```
-
-
-#### func  NewHgCheckoutClient
-
-```go
-func NewHgCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) HgCheckoutClient
-```
 
 #### type HgCheckoutOptions
 
