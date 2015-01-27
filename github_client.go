@@ -7,11 +7,12 @@ import (
 )
 
 type GithubCheckoutOptions struct {
-	User        string
-	Repository  string
-	Branch      string
-	CommitId    string
-	AccessToken string
+	User                string
+	Repository          string
+	Branch              string
+	CommitId            string
+	IgnoreCheckoutFiles bool
+	AccessToken         string
 }
 
 type GithubCheckoutClient interface {
@@ -23,7 +24,7 @@ func NewGithubCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFi
 }
 
 type githubCheckoutClient struct {
-	*baseGitCheckoutClient
+	baseCheckoutClient
 }
 
 func (this *githubCheckoutClient) CheckoutTarball(githubCheckoutOptions *GithubCheckoutOptions) (CheckoutTarball, error) {
@@ -39,11 +40,15 @@ func (this *githubCheckoutClient) CheckoutTarball(githubCheckoutOptions *GithubC
 	if githubCheckoutOptions.CommitId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
-	tarballReader, err := this.checkout(this.getGithubUrl(githubCheckoutOptions), githubCheckoutOptions.Branch, githubCheckoutOptions.CommitId)
-	if err != nil {
-		return nil, err
-	}
-	return newCheckoutTarball(tarballReader, githubCheckoutOptions.Branch, githubCheckoutOptions.CommitId), nil
+	return checkout(
+		this,
+		&baseCheckoutOptions{
+			url:                 this.getGithubUrl(githubCheckoutOptions),
+			branch:              githubCheckoutOptions.Branch,
+			commitId:            githubCheckoutOptions.CommitId,
+			ignoreCheckoutFiles: githubCheckoutOptions.IgnoreCheckoutFiles,
+		},
+	)
 }
 
 func (this *githubCheckoutClient) getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) string {

@@ -1,15 +1,6 @@
 package scm
 
-import (
-	"io"
-
-	"github.com/peter-edge/exec"
-	tarexec "github.com/peter-edge/tar/exec"
-)
-
-const (
-	clonePath = "clone"
-)
+import "github.com/peter-edge/exec"
 
 type baseGitCheckoutClient struct {
 	exec.ExecutorReadFileManagerProvider
@@ -20,37 +11,26 @@ func newBaseGitCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadF
 }
 
 // return a reader for a tarball for this checkout
-func (this *baseGitCheckoutClient) checkout(url string, branch string, commitId string) (io.Reader, error) {
-	client, err := this.NewTempDirExecutorReadFileManager()
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Execute(
+func (this *baseGitCheckoutClient) checkoutWithExecutor(executor exec.Executor, baseCheckoutOptions *baseCheckoutOptions, path string) error {
+	if err := executor.Execute(
 		&exec.Cmd{
 			// TODO(peter): if the commit id is more than 50 back, the checkout will fail
-			Args: []string{"git", "clone", "--branch", branch, "--depth", "50", "--recursive", url, clonePath},
+			Args: []string{"git", "clone", "--branch", baseCheckoutOptions.branch, "--depth", "50", "--recursive", baseCheckoutOptions.url, path},
 		},
 	)(); err != nil {
-		return nil, err
+		return err
 	}
-	if err := client.Execute(
+	return executor.Execute(
 		&exec.Cmd{
-			Args:   []string{"git", "checkout", "-f", commitId},
-			SubDir: clonePath,
+			Args:   []string{"git", "checkout", "-f", baseCheckoutOptions.commitId},
+			SubDir: path,
 		},
-	)(); err != nil {
-		return nil, err
+	)()
+}
+
+func (this *baseGitCheckoutClient) ignoreCheckoutFilePatterns() []string {
+	return []string{
+		".git",
+		".gitignore",
 	}
-	fileList, err := client.ListRegularFiles(clonePath)
-	if err != nil {
-		return nil, err
-	}
-	reader, err := tarexec.NewTarClient(client, nil).Tar(fileList, clonePath)
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Destroy(); err != nil {
-		return nil, err
-	}
-	return reader, nil
 }

@@ -3,9 +3,10 @@ package scm
 import "github.com/peter-edge/exec"
 
 type GitCheckoutOptions struct {
-	Url      string
-	Branch   string
-	CommitId string
+	Url                 string
+	Branch              string
+	CommitId            string
+	IgnoreCheckoutFiles bool
 }
 
 type GitCheckoutClient interface {
@@ -17,7 +18,7 @@ func NewGitCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileM
 }
 
 type gitCheckoutClient struct {
-	*baseGitCheckoutClient
+	baseCheckoutClient
 }
 
 func (this *gitCheckoutClient) CheckoutTarball(gitCheckoutOptions *GitCheckoutOptions) (CheckoutTarball, error) {
@@ -30,9 +31,13 @@ func (this *gitCheckoutClient) CheckoutTarball(gitCheckoutOptions *GitCheckoutOp
 	if gitCheckoutOptions.CommitId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
-	tarballReader, err := this.checkout(gitCheckoutOptions.Url, gitCheckoutOptions.Branch, gitCheckoutOptions.CommitId)
-	if err != nil {
-		return nil, err
-	}
-	return newCheckoutTarball(tarballReader, gitCheckoutOptions.Branch, gitCheckoutOptions.CommitId), nil
+	return checkout(
+		this,
+		&baseCheckoutOptions{
+			url:                 gitCheckoutOptions.Url,
+			branch:              gitCheckoutOptions.Branch,
+			commitId:            gitCheckoutOptions.CommitId,
+			ignoreCheckoutFiles: gitCheckoutOptions.IgnoreCheckoutFiles,
+		},
+	)
 }
