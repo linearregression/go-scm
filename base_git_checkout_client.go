@@ -28,7 +28,7 @@ func (this *baseGitCheckoutClient) checkoutWithExecutor(executor exec.Executor, 
 	)()
 }
 
-func (this *baseGitCheckoutClient) ignoreCheckoutFilePatterns() []string {
+func (this *baseGitCheckoutClient) ignoreCheckoutFilePatterns(readFileManager exec.ReadFileManager) []string {
 	return []string{
 		".git",
 		".gitignore",

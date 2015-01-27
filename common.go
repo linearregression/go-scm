@@ -2,6 +2,7 @@ package scm
 
 import (
 	"io"
+	"strings"
 
 	"github.com/peter-edge/exec"
 	tarexec "github.com/peter-edge/tar/exec"
@@ -21,7 +22,7 @@ type baseCheckoutOptions struct {
 type baseCheckoutClient interface {
 	exec.ExecutorReadFileManagerProvider
 	checkoutWithExecutor(exec.Executor, *baseCheckoutOptions, string) error
-	ignoreCheckoutFilePatterns() []string
+	ignoreCheckoutFilePatterns(exec.ReadFileManager) []string
 }
 
 func checkout(baseCheckoutClient baseCheckoutClient, baseCheckoutOptions *baseCheckoutOptions) (CheckoutTarball, error) {
@@ -35,7 +36,7 @@ func checkout(baseCheckoutClient baseCheckoutClient, baseCheckoutOptions *baseCh
 	}
 	var ignoreCheckoutFilePatterns []string = nil
 	if baseCheckoutOptions.ignoreCheckoutFiles {
-		ignoreCheckoutFilePatterns = baseCheckoutClient.ignoreCheckoutFilePatterns()
+		ignoreCheckoutFilePatterns = baseCheckoutClient.ignoreCheckoutFilePatterns(client)
 	}
 
 	reader, err := tarFiles(client, ignoreCheckoutFilePatterns, clonePath)
@@ -56,7 +57,7 @@ func tarFiles(readFileManager exec.ReadFileManager, ignoreCheckoutFilePatterns [
 	if ignoreCheckoutFilePatterns != nil && len(ignoreCheckoutFilePatterns) > 0 {
 		filterFileList := make([]string, 0)
 		for _, file := range fileList {
-			matches, err := fileMatches(readFileManager, ignoreCheckoutFilePatterns, file)
+			matches, err := fileMatches(readFileManager, ignoreCheckoutFilePatterns, file, path)
 			if err != nil {
 				return nil, err
 			}
@@ -69,13 +70,9 @@ func tarFiles(readFileManager exec.ReadFileManager, ignoreCheckoutFilePatterns [
 	return tarexec.NewTarClient(readFileManager, nil).Tar(fileList, path)
 }
 
-func fileMatches(readFileManager exec.ReadFileManager, patterns []string, path string) (bool, error) {
+func fileMatches(readFileManager exec.ReadFileManager, patterns []string, path string, basePath string) (bool, error) {
 	for _, pattern := range patterns {
-		matches, err := readFileManager.Match(pattern, path)
-		if err != nil {
-			return false, err
-		}
-		if matches {
+		if strings.HasPrefix(path, readFileManager.Join(basePath, pattern)) {
 			return true, nil
 		}
 	}

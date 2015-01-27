@@ -46,31 +46,49 @@ func (this *Suite) TearDownSuite() {
 }
 
 func (this *Suite) TestGit() {
+	this.testGit(false)
+}
+
+func (this *Suite) TestGitIgnore() {
+	this.testGit(true)
+}
+
+func (this *Suite) testGit(ignoreCheckoutFiles bool) {
 	checkoutTarball, err := NewGitCheckoutClient(this.clientProvider).CheckoutTarball(
 		&GitCheckoutOptions{
-			Url:      "https://github.com/peter-edge/smartystreets.git",
-			Branch:   "master",
-			CommitId: testSmartystreetsCommitId,
+			Url:                 "https://github.com/peter-edge/smartystreets.git",
+			Branch:              "master",
+			CommitId:            testSmartystreetsCommitId,
+			IgnoreCheckoutFiles: ignoreCheckoutFiles,
 		},
 	)
 	require.NoError(this.T(), err)
-	this.testSmartystreetsCheckoutTarball(checkoutTarball)
+	this.testSmartystreetsCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
 }
 
 func (this *Suite) TestGithub() {
+	this.testGithub(false)
+}
+
+func (this *Suite) TestGithubIgnore() {
+	this.testGithub(true)
+}
+
+func (this *Suite) testGithub(ignoreCheckoutFiles bool) {
 	checkoutTarball, err := NewGithubCheckoutClient(this.clientProvider).CheckoutTarball(
 		&GithubCheckoutOptions{
-			User:       "peter-edge",
-			Repository: "smartystreets_ruby",
-			Branch:     "master",
-			CommitId:   testSmartystreetsCommitId,
+			User:                "peter-edge",
+			Repository:          "smartystreets_ruby",
+			Branch:              "master",
+			CommitId:            testSmartystreetsCommitId,
+			IgnoreCheckoutFiles: ignoreCheckoutFiles,
 		},
 	)
 	require.NoError(this.T(), err)
-	this.testSmartystreetsCheckoutTarball(checkoutTarball)
+	this.testSmartystreetsCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarball) {
+func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarball, ignoreCheckoutFiles bool) {
 	clientProvider, err := execos.NewClientProvider()
 	require.NoError(this.T(), err)
 	client, err := clientProvider.NewTempDirClient()
@@ -79,13 +97,22 @@ func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball CheckoutTarb
 	require.NoError(this.T(), err)
 	_, err = os.Stat(client.Join(client.DirPath(), "smartystreets.gemspec"))
 	require.NoError(this.T(), err)
-	file, err := os.Open(client.Join(client.DirPath(), ".git/HEAD"))
-	require.NoError(this.T(), err)
-	defer file.Close()
-	data, err := ioutil.ReadAll(file)
-	require.NoError(this.T(), err)
-	var buffer bytes.Buffer
-	buffer.Write(data)
-	require.Equal(this.T(), testSmartystreetsCommitId, strings.TrimSpace(buffer.String()))
+	if !ignoreCheckoutFiles {
+		file, err := os.Open(client.Join(client.DirPath(), ".git/HEAD"))
+		require.NoError(this.T(), err)
+		defer file.Close()
+		data, err := ioutil.ReadAll(file)
+		require.NoError(this.T(), err)
+		var buffer bytes.Buffer
+		buffer.Write(data)
+		require.Equal(this.T(), testSmartystreetsCommitId, strings.TrimSpace(buffer.String()))
+	} else {
+		_, err := os.Open(client.Join(client.DirPath(), ".git"))
+		require.Error(this.T(), err)
+		require.True(this.T(), os.IsNotExist(err))
+		_, err = os.Open(client.Join(client.DirPath(), ".gitignore"))
+		require.Error(this.T(), err)
+		require.True(this.T(), os.IsNotExist(err))
+	}
 	require.NoError(this.T(), clientProvider.Destroy())
 }
