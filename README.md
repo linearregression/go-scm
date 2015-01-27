@@ -87,3 +87,29 @@ type GithubCheckoutOptions struct {
 	AccessToken         string
 }
 ```
+
+
+#### type HgCheckoutClient
+
+```go
+type HgCheckoutClient interface {
+	CheckoutTarball(*HgCheckoutOptions) (CheckoutTarball, error)
+}
+```
+
+
+#### func  NewHgCheckoutClient
+
+```go
+func NewHgCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) HgCheckoutClient
+```
+
+#### type HgCheckoutOptions
+
+```go
+type HgCheckoutOptions struct {
+	Url                 string
+	ChangesetId         string
+	IgnoreCheckoutFiles bool
+}
+```
