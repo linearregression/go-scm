@@ -52,9 +52,10 @@ func NewGitCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFileM
 
 ```go
 type GitCheckoutOptions struct {
-	Url      string
-	Branch   string
-	CommitId string
+	Url                 string
+	Branch              string
+	CommitId            string
+	IgnoreCheckoutFiles bool
 }
 ```
 
@@ -78,10 +79,11 @@ func NewGithubCheckoutClient(executorReadFileManagerProvider exec.ExecutorReadFi
 
 ```go
 type GithubCheckoutOptions struct {
-	User        string
-	Repository  string
-	Branch      string
-	CommitId    string
-	AccessToken string
+	User                string
+	Repository          string
+	Branch              string
+	CommitId            string
+	IgnoreCheckoutFiles bool
+	AccessToken         string
 }
 ```
