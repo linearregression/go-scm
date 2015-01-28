@@ -13,10 +13,11 @@ const (
 )
 
 func newClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider, clientOptions *ClientOptions) *client {
-	return &client{newBaseGitClient(executorReadFileManagerProvider), newBaseHgClient(executorReadFileManagerProvider), clientOptions}
+	return &client{executorReadFileManagerProvider, newBaseGitClient(), newBaseHgClient(), clientOptions}
 }
 
 type client struct {
+	exec.ExecutorReadFileManagerProvider
 	gitClient     *baseGitClient
 	hgClient      *baseHgClient
 	clientOptions *ClientOptions
@@ -38,17 +39,18 @@ func (this *client) CheckoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (
 	if gitCheckoutOptions.CommitId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
+	baseCloneArgs := []string{"git", "clone"}
 	url, err := getGitUrl(gitCheckoutOptions)
 	if err != nil {
 		return nil, err
 	}
-	return checkout(
+	return this.checkout(
 		this.gitClient,
 		&baseCheckoutOptions{
-			url:                 url,
-			branch:              gitCheckoutOptions.Branch,
-			commitId:            gitCheckoutOptions.CommitId,
-			ignoreCheckoutFiles: this.clientOptions.IgnoreCheckoutFiles,
+			baseCloneArgs: baseCloneArgs,
+			url:           url,
+			branch:        gitCheckoutOptions.Branch,
+			commitId:      gitCheckoutOptions.CommitId,
 		},
 	)
 }
@@ -66,17 +68,18 @@ func (this *client) CheckoutGithubTarball(githubCheckoutOptions *GithubCheckoutO
 	if githubCheckoutOptions.CommitId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
+	baseCloneArgs := []string{"git", "clone"}
 	url, err := getGithubUrl(githubCheckoutOptions)
 	if err != nil {
 		return nil, err
 	}
-	return checkout(
+	return this.checkout(
 		this.gitClient,
 		&baseCheckoutOptions{
-			url:                 url,
-			branch:              githubCheckoutOptions.Branch,
-			commitId:            githubCheckoutOptions.CommitId,
-			ignoreCheckoutFiles: this.clientOptions.IgnoreCheckoutFiles,
+			baseCloneArgs: baseCloneArgs,
+			url:           url,
+			branch:        githubCheckoutOptions.Branch,
+			commitId:      githubCheckoutOptions.CommitId,
 		},
 	)
 }
@@ -94,18 +97,43 @@ func (this *client) CheckoutHgTarball(hgCheckoutOptions *HgCheckoutOptions) (io.
 	if hgCheckoutOptions.ChangesetId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
+	baseCloneArgs := []string{"hg", "clone"}
 	url, err := getHgUrl(hgCheckoutOptions)
 	if err != nil {
 		return nil, err
 	}
-	return checkout(
+	return this.checkout(
 		this.hgClient,
 		&baseCheckoutOptions{
-			url:                 url,
-			commitId:            hgCheckoutOptions.ChangesetId,
-			ignoreCheckoutFiles: this.clientOptions.IgnoreCheckoutFiles,
+			baseCloneArgs: baseCloneArgs,
+			url:           url,
+			commitId:      hgCheckoutOptions.ChangesetId,
 		},
 	)
+}
+
+func (this *client) checkout(baseClient baseClient, baseCheckoutOptions *baseCheckoutOptions) (io.Reader, error) {
+	client, err := this.NewTempDirExecutorReadFileManager()
+	if err != nil {
+		return nil, err
+	}
+	err = baseClient.checkoutWithExecutor(client, baseCheckoutOptions, clonePath)
+	if err != nil {
+		return nil, err
+	}
+	var ignoreCheckoutFilePatterns []string = nil
+	if this.clientOptions.IgnoreCheckoutFiles {
+		ignoreCheckoutFilePatterns = baseClient.ignoreCheckoutFilePatterns(client)
+	}
+
+	reader, err := tarFiles(client, ignoreCheckoutFilePatterns, clonePath)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Destroy(); err != nil {
+		return nil, err
+	}
+	return reader, nil
 }
 
 func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
@@ -161,30 +189,6 @@ func getSshUrl(base string, user string, host string, path string) string {
 
 func getAccessTokenUrl(accessToken string, host string, path string) string {
 	return joinStrings("https://", accessToken, ":x-oauth-basic@", host, "/", path)
-}
-
-func checkout(baseClient baseClient, baseCheckoutOptions *baseCheckoutOptions) (io.Reader, error) {
-	client, err := baseClient.NewTempDirExecutorReadFileManager()
-	if err != nil {
-		return nil, err
-	}
-	err = baseClient.checkoutWithExecutor(client, baseCheckoutOptions, clonePath)
-	if err != nil {
-		return nil, err
-	}
-	var ignoreCheckoutFilePatterns []string = nil
-	if baseCheckoutOptions.ignoreCheckoutFiles {
-		ignoreCheckoutFilePatterns = baseClient.ignoreCheckoutFilePatterns(client)
-	}
-
-	reader, err := tarFiles(client, ignoreCheckoutFilePatterns, clonePath)
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Destroy(); err != nil {
-		return nil, err
-	}
-	return reader, nil
 }
 
 func tarFiles(readFileManager exec.ReadFileManager, ignoreCheckoutFilePatterns []string, path string) (io.Reader, error) {

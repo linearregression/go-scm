@@ -3,31 +3,29 @@ package scm
 import "github.com/peter-edge/exec"
 
 type baseCheckoutOptions struct {
-	url                 string
-	branch              string
-	commitId            string
-	ignoreCheckoutFiles bool
+	baseCloneArgs []string
+	url           string
+	branch        string
+	commitId      string
 }
 
 type baseClient interface {
-	exec.ExecutorReadFileManagerProvider
 	checkoutWithExecutor(exec.Executor, *baseCheckoutOptions, string) error
 	ignoreCheckoutFilePatterns(exec.ReadFileManager) []string
 }
 
 type baseGitClient struct {
-	exec.ExecutorReadFileManagerProvider
 }
 
-func newBaseGitClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) *baseGitClient {
-	return &baseGitClient{executorReadFileManagerProvider}
+func newBaseGitClient() *baseGitClient {
+	return &baseGitClient{}
 }
 
 func (this *baseGitClient) checkoutWithExecutor(executor exec.Executor, baseCheckoutOptions *baseCheckoutOptions, path string) error {
 	if err := executor.Execute(
 		&exec.Cmd{
 			// TODO(peter): if the commit id is more than 50 back, the checkout will fail
-			Args: []string{"git", "clone", "--branch", baseCheckoutOptions.branch, "--depth", "50", "--recursive", baseCheckoutOptions.url, path},
+			Args: append(baseCheckoutOptions.baseCloneArgs, []string{"--branch", baseCheckoutOptions.branch, "--depth", "50", "--recursive", baseCheckoutOptions.url, path}...),
 		},
 	)(); err != nil {
 		return err
@@ -48,19 +46,17 @@ func (this *baseGitClient) ignoreCheckoutFilePatterns(readFileManager exec.ReadF
 }
 
 type baseHgClient struct {
-	exec.ExecutorReadFileManagerProvider
 }
 
-func newBaseHgClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider) *baseHgClient {
-	return &baseHgClient{executorReadFileManagerProvider}
+func newBaseHgClient() *baseHgClient {
+	return &baseHgClient{}
 }
 
 // return a reader for a tarball for this checkout
 func (this *baseHgClient) checkoutWithExecutor(executor exec.Executor, baseCheckoutOptions *baseCheckoutOptions, path string) error {
 	if err := executor.Execute(
 		&exec.Cmd{
-			// TODO(peter): if the commit id is more than 50 back, the checkout will fail
-			Args: []string{"hg", "clone", baseCheckoutOptions.url, path},
+			Args: append(baseCheckoutOptions.baseCloneArgs, []string{"hg", "clone", baseCheckoutOptions.url, path}...),
 		},
 	)(); err != nil {
 		return err
