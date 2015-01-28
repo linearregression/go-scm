@@ -25,7 +25,7 @@ func (this *baseGitClient) checkoutWithExecutor(executor exec.Executor, baseChec
 	if err := executor.Execute(
 		&exec.Cmd{
 			// TODO(peter): if the commit id is more than 50 back, the checkout will fail
-			Args: append(baseCheckoutOptions.baseCloneArgs, []string{"--branch", baseCheckoutOptions.branch, "--depth", "50", "--recursive", baseCheckoutOptions.url, path}...),
+			Args: append(baseCheckoutOptions.baseCloneArgs, "--branch", baseCheckoutOptions.branch, "--depth", "50", "--recursive", baseCheckoutOptions.url, path),
 		},
 	)(); err != nil {
 		return err
@@ -56,7 +56,7 @@ func newBaseHgClient() *baseHgClient {
 func (this *baseHgClient) checkoutWithExecutor(executor exec.Executor, baseCheckoutOptions *baseCheckoutOptions, path string) error {
 	if err := executor.Execute(
 		&exec.Cmd{
-			Args: append(baseCheckoutOptions.baseCloneArgs, []string{"hg", "clone", baseCheckoutOptions.url, path}...),
+			Args: append(baseCheckoutOptions.baseCloneArgs, baseCheckoutOptions.url, path),
 		},
 	)(); err != nil {
 		return err
