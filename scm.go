@@ -41,6 +41,6 @@ type Client interface {
 	CheckoutHgTarball(*HgCheckoutOptions) (io.Reader, error)
 }
 
-func NewClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider, clientOptions *ClientOptions) Client {
-	return newClient(executorReadFileManagerProvider, clientOptions)
+func NewClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) Client {
+	return newClient(execClientProvider, clientOptions)
 }

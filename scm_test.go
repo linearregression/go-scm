@@ -41,7 +41,7 @@ func (this *Suite) SetupTest() {
 }
 
 func (this *Suite) TearDownTest() {
-	require.NoError(this.T(), this.clientProvider.Destroy())
+	//require.NoError(this.T(), this.clientProvider.Destroy())
 }
 
 func (this *Suite) TearDownSuite() {
@@ -86,6 +86,7 @@ func (this *Suite) testGithub(ignoreCheckoutFiles bool) {
 			Repository: "smartystreets_ruby",
 			Branch:     "master",
 			CommitId:   testSmartystreetsCommitId,
+			//SecurityOptions: NewGithubSecurityOptionsSsh(this.getSshOptions()),
 		},
 	)
 	require.NoError(this.T(), err)
@@ -137,6 +138,7 @@ func (this *Suite) testHg(ignoreCheckoutFiles bool) {
 			Host:        "bitbucket.org",
 			Path:        "/durin42/hg-git",
 			ChangesetId: testHgGitChangesetId,
+			//SecurityOptions: NewHgSecurityOptionsSsh(this.getSshOptions()),
 		},
 	)
 	require.NoError(this.T(), err)
@@ -171,4 +173,19 @@ func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreChe
 		require.True(this.T(), os.IsNotExist(err))
 	}
 	require.NoError(this.T(), clientProvider.Destroy())
+}
+
+func (this *Suite) getSshOptions() *SshOptions {
+	privateKeyReader, err := os.Open(os.Getenv("HOME") + "/.ssh/id_rsa")
+	require.NoError(this.T(), err)
+	defer privateKeyReader.Close()
+	data, err := ioutil.ReadAll(privateKeyReader)
+	require.NoError(this.T(), err)
+	var buffer bytes.Buffer
+	_, err = buffer.Write(data)
+	require.NoError(this.T(), err)
+	return &SshOptions{
+		StrictHostKeyChecking: false,
+		PrivateKey:            &buffer,
+	}
 }

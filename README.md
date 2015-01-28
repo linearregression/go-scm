@@ -1,6 +1,7 @@
-[![Codeship Status](http://img.shields.io/codeship/34b974b0-6dfa-0132-51b4-66f2bf861e14/master.svg?style=flat-square)](https://codeship.com/projects/59076)
 [![API Documentation](http://img.shields.io/badge/api-Godoc-blue.svg?style=flat-square)](https://godoc.org/github.com/peter-edge/scm)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/peter-edge/scm/blob/master/LICENSE)
+
+Scm utilities for Go.
 
 ## Installation
 ```bash
@@ -14,13 +15,33 @@ import (
 )
 ```
 
+Git SSH requires Git 2.3.0.
+
 ## Usage
 
 ```go
 var (
-	ErrRequiredFieldMissing = errors.New("scm: required field missing")
+	ErrNil                    = errors.New("scm: nil")
+	ErrWrongSecurityType      = errors.New("scm: wrong security type")
+	ErrRequiredFieldMissing   = errors.New("scm: required field missing")
+	ErrSecurityNotImplemented = errors.New("scm: security not implemented")
 )
 ```
+
+#### func  AllsecurityTypes
+
+```go
+func AllsecurityTypes() []securityType
+```
+
+#### type AccessTokenOptions
+
+```go
+type AccessTokenOptions struct {
+	AccessToken string
+}
+```
+
 
 #### type Client
 
@@ -36,7 +57,7 @@ type Client interface {
 #### func  NewClient
 
 ```go
-func NewClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvider, clientOptions *ClientOptions) Client
+func NewClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) Client
 ```
 
 #### type ClientOptions
@@ -52,32 +73,104 @@ type ClientOptions struct {
 
 ```go
 type GitCheckoutOptions struct {
-	Url      string
-	Branch   string
-	CommitId string
+	User            string
+	Host            string
+	Path            string
+	Branch          string
+	CommitId        string
+	SecurityOptions *GitSecurityOptions
 }
 ```
 
+
+#### type GitSecurityOptions
+
+```go
+type GitSecurityOptions struct {
+}
+```
+
+
+#### func  NewGitSecurityOptionsSsh
+
+```go
+func NewGitSecurityOptionsSsh(sshOptions *SshOptions) *GitSecurityOptions
+```
 
 #### type GithubCheckoutOptions
 
 ```go
 type GithubCheckoutOptions struct {
-	User        string
-	Repository  string
-	Branch      string
-	CommitId    string
-	AccessToken string
+	User            string
+	Repository      string
+	Branch          string
+	CommitId        string
+	SecurityOptions *GithubSecurityOptions
 }
 ```
 
+
+#### type GithubSecurityOptions
+
+```go
+type GithubSecurityOptions struct {
+}
+```
+
+
+#### func  NewGithubSecurityOptionsAccessToken
+
+```go
+func NewGithubSecurityOptionsAccessToken(accessTokenOptions *AccessTokenOptions) *GithubSecurityOptions
+```
+
+#### func  NewGithubSecurityOptionsSsh
+
+```go
+func NewGithubSecurityOptionsSsh(sshOptions *SshOptions) *GithubSecurityOptions
+```
 
 #### type HgCheckoutOptions
 
 ```go
 type HgCheckoutOptions struct {
-	Url                 string
-	ChangesetId         string
-	IgnoreCheckoutFiles bool
+	User            string
+	Host            string
+	Path            string
+	ChangesetId     string
+	SecurityOptions *HgSecurityOptions
+}
+```
+
+
+#### type HgSecurityOptions
+
+```go
+type HgSecurityOptions struct {
+}
+```
+
+
+#### func  NewHgSecurityOptionsSsh
+
+```go
+func NewHgSecurityOptionsSsh(sshOptions *SshOptions) *HgSecurityOptions
+```
+
+#### type SecurityOptions
+
+```go
+type SecurityOptions interface {
+	// contains filtered or unexported methods
+}
+```
+
+
+#### type SshOptions
+
+```go
+type SshOptions struct {
+	StrictHostKeyChecking bool
+	PrivateKey            io.Reader
 }
 ```
