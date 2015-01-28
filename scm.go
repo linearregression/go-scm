@@ -7,23 +7,28 @@ import (
 )
 
 type GitCheckoutOptions struct {
-	Url      string
-	Branch   string
-	CommitId string
+	User            string
+	Host            string
+	Path            string
+	Branch          string
+	CommitId        string
+	SecurityOptions *GitSecurityOptions
 }
 
 type GithubCheckoutOptions struct {
-	User        string
-	Repository  string
-	Branch      string
-	CommitId    string
-	AccessToken string
+	User            string
+	Repository      string
+	Branch          string
+	CommitId        string
+	SecurityOptions *GithubSecurityOptions
 }
 
 type HgCheckoutOptions struct {
-	Url                 string
-	ChangesetId         string
-	IgnoreCheckoutFiles bool
+	User            string
+	Host            string
+	Path            string
+	ChangesetId     string
+	SecurityOptions *HgSecurityOptions
 }
 
 type ClientOptions struct {

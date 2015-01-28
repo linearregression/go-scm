@@ -17,13 +17,19 @@ func newClient(executorReadFileManagerProvider exec.ExecutorReadFileManagerProvi
 }
 
 type client struct {
-	gitClient     baseClient
-	hgClient      baseClient
+	gitClient     *baseGitClient
+	hgClient      *baseHgClient
 	clientOptions *ClientOptions
 }
 
 func (this *client) CheckoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (io.Reader, error) {
-	if gitCheckoutOptions.Url == "" {
+	if gitCheckoutOptions.User == "" {
+		return nil, ErrRequiredFieldMissing
+	}
+	if gitCheckoutOptions.Host == "" {
+		return nil, ErrRequiredFieldMissing
+	}
+	if gitCheckoutOptions.Path == "" {
 		return nil, ErrRequiredFieldMissing
 	}
 	if gitCheckoutOptions.Branch == "" {
@@ -32,10 +38,14 @@ func (this *client) CheckoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (
 	if gitCheckoutOptions.CommitId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
+	url, err := getGitUrl(gitCheckoutOptions)
+	if err != nil {
+		return nil, err
+	}
 	return checkout(
 		this.gitClient,
 		&baseCheckoutOptions{
-			url:                 gitCheckoutOptions.Url,
+			url:                 url,
 			branch:              gitCheckoutOptions.Branch,
 			commitId:            gitCheckoutOptions.CommitId,
 			ignoreCheckoutFiles: this.clientOptions.IgnoreCheckoutFiles,
@@ -56,10 +66,14 @@ func (this *client) CheckoutGithubTarball(githubCheckoutOptions *GithubCheckoutO
 	if githubCheckoutOptions.CommitId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
+	url, err := getGithubUrl(githubCheckoutOptions)
+	if err != nil {
+		return nil, err
+	}
 	return checkout(
 		this.gitClient,
 		&baseCheckoutOptions{
-			url:                 this.getGithubUrl(githubCheckoutOptions),
+			url:                 url,
 			branch:              githubCheckoutOptions.Branch,
 			commitId:            githubCheckoutOptions.CommitId,
 			ignoreCheckoutFiles: this.clientOptions.IgnoreCheckoutFiles,
@@ -68,48 +82,85 @@ func (this *client) CheckoutGithubTarball(githubCheckoutOptions *GithubCheckoutO
 }
 
 func (this *client) CheckoutHgTarball(hgCheckoutOptions *HgCheckoutOptions) (io.Reader, error) {
-	if hgCheckoutOptions.Url == "" {
+	if hgCheckoutOptions.User == "" {
+		return nil, ErrRequiredFieldMissing
+	}
+	if hgCheckoutOptions.Host == "" {
+		return nil, ErrRequiredFieldMissing
+	}
+	if hgCheckoutOptions.Path == "" {
 		return nil, ErrRequiredFieldMissing
 	}
 	if hgCheckoutOptions.ChangesetId == "" {
 		return nil, ErrRequiredFieldMissing
 	}
+	url, err := getHgUrl(hgCheckoutOptions)
+	if err != nil {
+		return nil, err
+	}
 	return checkout(
 		this.hgClient,
 		&baseCheckoutOptions{
-			url:                 hgCheckoutOptions.Url,
+			url:                 url,
 			commitId:            hgCheckoutOptions.ChangesetId,
 			ignoreCheckoutFiles: this.clientOptions.IgnoreCheckoutFiles,
 		},
 	)
 }
 
-func (this *client) getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) string {
-	return strings.Join(
-		[]string{
-			this.getGithubBaseUrl(githubCheckoutOptions.AccessToken),
-			"/",
-			githubCheckoutOptions.User,
-			"/",
-			githubCheckoutOptions.Repository,
-			".git",
-		},
-		"",
-	)
+func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
+	if gitCheckoutOptions.SecurityOptions == nil || gitCheckoutOptions.SecurityOptions.securityType() == securityTypeSsh {
+		return getSshUrl(
+			"",
+			gitCheckoutOptions.User,
+			gitCheckoutOptions.Host,
+			gitCheckoutOptions.Path,
+		), nil
+	}
+	return "", ErrSecurityNotImplemented
 }
 
-func (this *client) getGithubBaseUrl(accessToken string) string {
-	if accessToken != "" {
-		return strings.Join(
-			[]string{
-				"https://",
-				accessToken,
-				":x-oauth-basic@github.com",
-			},
+func getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) (string, error) {
+	if githubCheckoutOptions.SecurityOptions == nil || githubCheckoutOptions.SecurityOptions.securityType() == securityTypeSsh {
+		return getSshUrl(
 			"",
-		)
+			"git",
+			"github.com",
+			getGithubPath(githubCheckoutOptions),
+		), nil
 	}
-	return "https://github.com"
+	if githubCheckoutOptions.SecurityOptions.securityType() == securityTypeAccessToken {
+		return getAccessTokenUrl(
+			githubCheckoutOptions.SecurityOptions.accessTokenOptions().AccessToken,
+			"github.com",
+			getGithubPath(githubCheckoutOptions),
+		), nil
+	}
+	return "", ErrSecurityNotImplemented
+}
+
+func getGithubPath(githubCheckoutOptions *GithubCheckoutOptions) string {
+	return joinStrings(":", githubCheckoutOptions.User, "/", githubCheckoutOptions.Repository, ".git")
+}
+
+func getHgUrl(hgCheckoutOptions *HgCheckoutOptions) (string, error) {
+	if hgCheckoutOptions.SecurityOptions == nil || hgCheckoutOptions.SecurityOptions.securityType() == securityTypeSsh {
+		return getSshUrl(
+			"ssh://",
+			hgCheckoutOptions.User,
+			hgCheckoutOptions.Host,
+			hgCheckoutOptions.Path,
+		), nil
+	}
+	return "", ErrSecurityNotImplemented
+}
+
+func getSshUrl(base string, user string, host string, path string) string {
+	return joinStrings(base, user, "@", host, path)
+}
+
+func getAccessTokenUrl(accessToken string, host string, path string) string {
+	return joinStrings("https://", accessToken, ":x-oauth-basic@", host, "/", path)
 }
 
 func checkout(baseClient baseClient, baseCheckoutOptions *baseCheckoutOptions) (io.Reader, error) {
@@ -164,4 +215,8 @@ func fileMatches(readFileManager exec.ReadFileManager, patterns []string, path s
 		}
 	}
 	return false, nil
+}
+
+func joinStrings(elems ...string) string {
+	return strings.Join(elems, "")
 }

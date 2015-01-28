@@ -59,7 +59,9 @@ func (this *Suite) testGit(ignoreCheckoutFiles bool) {
 	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutGitTarball(
 		&GitCheckoutOptions{
-			Url:      "https://github.com/peter-edge/smartystreets.git",
+			User:     "git",
+			Host:     "github.com",
+			Path:     ":peter-edge/smartystreets.git",
 			Branch:   "master",
 			CommitId: testSmartystreetsCommitId,
 		},
@@ -131,7 +133,9 @@ func (this *Suite) testHg(ignoreCheckoutFiles bool) {
 	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutHgTarball(
 		&HgCheckoutOptions{
-			Url:         "https://bitbucket.org/durin42/hg-git",
+			User:        "hg",
+			Host:        "bitbucket.org",
+			Path:        "/durin42/hg-git",
 			ChangesetId: testHgGitChangesetId,
 		},
 	)

@@ -23,7 +23,6 @@ func newBaseGitClient(executorReadFileManagerProvider exec.ExecutorReadFileManag
 	return &baseGitClient{executorReadFileManagerProvider}
 }
 
-// return a reader for a tarball for this checkout
 func (this *baseGitClient) checkoutWithExecutor(executor exec.Executor, baseCheckoutOptions *baseCheckoutOptions, path string) error {
 	if err := executor.Execute(
 		&exec.Cmd{
