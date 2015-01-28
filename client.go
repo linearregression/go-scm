@@ -202,14 +202,14 @@ func getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) (string, error) 
 			"",
 			"git",
 			"github.com",
-			getGithubPath(githubCheckoutOptions),
+			joinStrings(":", githubCheckoutOptions.User, "/", githubCheckoutOptions.Repository, ".git"),
 		), nil
 	}
 	if githubCheckoutOptions.SecurityOptions.securityType() == securityTypeAccessToken {
 		return getAccessTokenUrl(
 			githubCheckoutOptions.SecurityOptions.accessTokenOptions().AccessToken,
 			"github.com",
-			getGithubPath(githubCheckoutOptions),
+			joinStrings("/", githubCheckoutOptions.User, "/", githubCheckoutOptions.Repository, ".git"),
 		), nil
 	}
 	return "", ErrSecurityNotImplemented
@@ -227,16 +227,12 @@ func getHgUrl(hgCheckoutOptions *HgCheckoutOptions) (string, error) {
 	return "", ErrSecurityNotImplemented
 }
 
-func getGithubPath(githubCheckoutOptions *GithubCheckoutOptions) string {
-	return joinStrings(":", githubCheckoutOptions.User, "/", githubCheckoutOptions.Repository, ".git")
-}
-
 func getSshUrl(base string, user string, host string, path string) string {
 	return joinStrings(base, user, "@", host, path)
 }
 
 func getAccessTokenUrl(accessToken string, host string, path string) string {
-	return joinStrings("https://", accessToken, ":x-oauth-basic@", host, "/", path)
+	return joinStrings("https://", accessToken, ":x-oauth-basic@", host, path)
 }
 
 func checkoutGitWithExecutor(
