@@ -145,6 +145,29 @@ func (this *Suite) testHg(ignoreCheckoutFiles bool) {
 	this.testHgGitCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
 }
 
+func (this *Suite) TestBitbucketHg() {
+	this.testBitbucketHg(false)
+}
+
+func (this *Suite) TestBitbucketHgIgnore() {
+	this.testBitbucketHg(true)
+}
+
+func (this *Suite) testBitbucketHg(ignoreCheckoutFiles bool) {
+	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+	checkoutTarball, err := client.CheckoutBitbucketTarball(
+		&BitbucketCheckoutOptions{
+			Type:        BitbucketTypeHg,
+			User:        "durin42",
+			Repository:  "hg-git",
+			ChangesetId: testHgGitChangesetId,
+			//SecurityOptions: NewHgSecurityOptionsSsh(this.getSshOptions()),
+		},
+	)
+	require.NoError(this.T(), err)
+	this.testHgGitCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
+}
+
 func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
 	clientProvider, err := execos.NewClientProvider()
 	require.NoError(this.T(), err)

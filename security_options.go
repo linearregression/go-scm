@@ -84,3 +84,24 @@ func (this *HgSecurityOptions) sshOptions() *SshOptions {
 func (this *HgSecurityOptions) accessTokenOptions() *AccessTokenOptions {
 	return nil
 }
+
+type BitbucketSecurityOptions struct {
+	securityType_ securityType
+	sshOptions_   *SshOptions
+}
+
+func NewBitbucketSecurityOptionsSsh(sshOptions *SshOptions) *BitbucketSecurityOptions {
+	return &BitbucketSecurityOptions{securityTypeSsh, sshOptions}
+}
+
+func (this *BitbucketSecurityOptions) securityType() securityType {
+	return this.securityType_
+}
+
+func (this *BitbucketSecurityOptions) sshOptions() *SshOptions {
+	return this.sshOptions_
+}
+
+func (this *BitbucketSecurityOptions) accessTokenOptions() *AccessTokenOptions {
+	return nil
+}

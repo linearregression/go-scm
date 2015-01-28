@@ -15,7 +15,7 @@ var (
 		securityTypeSsh:         "ssh",
 		securityTypeAccessToken: "accessToken",
 	}
-	lensecurityTypeToString = len(securityTypeToString)
+	lenSecurityTypeToString = len(securityTypeToString)
 	stringToSecurityType    = map[string]securityType{
 		"ssh":         securityTypeSsh,
 		"accessToken": securityTypeAccessToken,
@@ -40,7 +40,7 @@ func securityTypeOf(s string) (securityType, error) {
 }
 
 func (this securityType) String() string {
-	if int(this) < lensecurityTypeToString {
+	if int(this) < lenSecurityTypeToString {
 		return securityTypeToString[this]
 	}
 	panic(unknownSecurityType(this))

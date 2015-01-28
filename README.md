@@ -20,12 +20,27 @@ Git SSH requires Git 2.3.0.
 ## Usage
 
 ```go
+const (
+	BitbucketTypeGit = iota
+	BitbucketTypeHg
+)
+```
+
+```go
 var (
 	ErrNil                    = errors.New("scm: nil")
 	ErrWrongSecurityType      = errors.New("scm: wrong security type")
 	ErrRequiredFieldMissing   = errors.New("scm: required field missing")
+	ErrFieldShouldNotBeSet    = errors.New("scm: field should not be set")
 	ErrSecurityNotImplemented = errors.New("scm: security not implemented")
+	ErrUnknownBitbucketType   = errors.New("scm: unknown BitbucketType")
 )
+```
+
+#### func  AllBitbucketTypes
+
+```go
+func AllBitbucketTypes() []BitbucketType
 ```
 
 #### type AccessTokenOptions
@@ -37,6 +52,54 @@ type AccessTokenOptions struct {
 ```
 
 
+#### type BitbucketCheckoutOptions
+
+```go
+type BitbucketCheckoutOptions struct {
+	Type            BitbucketType
+	User            string
+	Repository      string
+	Branch          string // only set if BitbucketType == BitbucketTypeGit
+	CommitId        string // only set if BitbucketType == BitbucketTypeGit
+	ChangesetId     string // only set if BitbucketType == BitbucketTypeHg
+	SecurityOptions *BitbucketSecurityOptions
+}
+```
+
+
+#### type BitbucketSecurityOptions
+
+```go
+type BitbucketSecurityOptions struct {
+}
+```
+
+
+#### func  NewBitbucketSecurityOptionsSsh
+
+```go
+func NewBitbucketSecurityOptionsSsh(sshOptions *SshOptions) *BitbucketSecurityOptions
+```
+
+#### type BitbucketType
+
+```go
+type BitbucketType uint
+```
+
+
+#### func  BitbucketTypeOf
+
+```go
+func BitbucketTypeOf(s string) (BitbucketType, error)
+```
+
+#### func (BitbucketType) String
+
+```go
+func (this BitbucketType) String() string
+```
+
 #### type Client
 
 ```go
@@ -44,6 +107,7 @@ type Client interface {
 	CheckoutGitTarball(*GitCheckoutOptions) (io.Reader, error)
 	CheckoutGithubTarball(*GithubCheckoutOptions) (io.Reader, error)
 	CheckoutHgTarball(*HgCheckoutOptions) (io.Reader, error)
+	CheckoutBitbucketTarball(*BitbucketCheckoutOptions) (io.Reader, error)
 }
 ```
 
