@@ -24,7 +24,7 @@ var (
 
 type securityType uint
 
-func AllsecurityTypes() []securityType {
+func allSecurityTypes() []securityType {
 	return []securityType{
 		securityTypeSsh,
 		securityTypeAccessToken,

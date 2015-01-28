@@ -28,12 +28,6 @@ var (
 )
 ```
 
-#### func  AllsecurityTypes
-
-```go
-func AllsecurityTypes() []securityType
-```
-
 #### type AccessTokenOptions
 
 ```go
