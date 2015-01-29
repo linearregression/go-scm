@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/peter-edge/exec"
-	tarexec "github.com/peter-edge/tar/exec"
+	"github.com/peter-edge/go-exec"
+	tarexec "github.com/peter-edge/go-tar/exec"
 )
 
 const (

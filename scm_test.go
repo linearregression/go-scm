@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peter-edge/exec"
-	execos "github.com/peter-edge/exec/os"
-	tarexec "github.com/peter-edge/tar/exec"
+	"github.com/peter-edge/go-exec"
+	execos "github.com/peter-edge/go-exec/os"
+	tarexec "github.com/peter-edge/go-tar/exec"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

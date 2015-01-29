@@ -3,7 +3,7 @@ package scm
 import (
 	"io"
 
-	"github.com/peter-edge/exec"
+	"github.com/peter-edge/go-exec"
 )
 
 type GitCheckoutOptions struct {
