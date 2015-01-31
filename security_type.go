@@ -5,41 +5,32 @@ import (
 	"fmt"
 )
 
-const (
-	securityTypeSsh = iota
-	securityTypeAccessToken
-)
-
 var (
-	securityTypeToString = map[securityType]string{
-		securityTypeSsh:         "ssh",
-		securityTypeAccessToken: "accessToken",
+	SecurityTypeSsh         SecurityType = 0
+	SecurityTypeAccessToken SecurityType = 1
+
+	securityTypeToString = map[SecurityType]string{
+		SecurityTypeSsh:         "ssh",
+		SecurityTypeAccessToken: "accessToken",
 	}
 	lenSecurityTypeToString = len(securityTypeToString)
-	stringToSecurityType    = map[string]securityType{
-		"ssh":         securityTypeSsh,
-		"accessToken": securityTypeAccessToken,
+	stringToSecurityType    = map[string]SecurityType{
+		"ssh":         SecurityTypeSsh,
+		"accessToken": SecurityTypeAccessToken,
 	}
 )
 
-type securityType uint
+type SecurityType uint
 
-func allSecurityTypes() []securityType {
-	return []securityType{
-		securityTypeSsh,
-		securityTypeAccessToken,
-	}
-}
-
-func securityTypeOf(s string) (securityType, error) {
-	securityType, ok := stringToSecurityType[s]
+func SecurityTypeOf(s string) (SecurityType, error) {
+	SecurityType, ok := stringToSecurityType[s]
 	if !ok {
 		return 0, errors.New(unknownSecurityType(s))
 	}
-	return securityType, nil
+	return SecurityType, nil
 }
 
-func (this securityType) String() string {
+func (this SecurityType) String() string {
 	if int(this) < lenSecurityTypeToString {
 		return securityTypeToString[this]
 	}
@@ -47,5 +38,5 @@ func (this securityType) String() string {
 }
 
 func unknownSecurityType(unknownSecurityType interface{}) string {
-	return fmt.Sprintf("Unknown securityType: %v", unknownSecurityType)
+	return fmt.Sprintf("Unknown SecurityType: %v", unknownSecurityType)
 }

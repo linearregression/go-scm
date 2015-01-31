@@ -57,7 +57,7 @@ func (this *Suite) TestGitIgnore() {
 
 func (this *Suite) testGit(ignoreCheckoutFiles bool) {
 	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutGitTarball(
+	checkoutTarball, err := client.CheckoutTarball(
 		&GitCheckoutOptions{
 			User:     "git",
 			Host:     "github.com",
@@ -80,7 +80,7 @@ func (this *Suite) TestGithubIgnore() {
 
 func (this *Suite) testGithub(ignoreCheckoutFiles bool) {
 	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutGithubTarball(
+	checkoutTarball, err := client.CheckoutTarball(
 		&GithubCheckoutOptions{
 			User:       "peter-edge",
 			Repository: "smartystreets_ruby",
@@ -132,7 +132,7 @@ func (this *Suite) TestHgIgnore() {
 
 func (this *Suite) testHg(ignoreCheckoutFiles bool) {
 	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutHgTarball(
+	checkoutTarball, err := client.CheckoutTarball(
 		&HgCheckoutOptions{
 			User:        "hg",
 			Host:        "bitbucket.org",
@@ -155,12 +155,12 @@ func (this *Suite) TestBitbucketHgIgnore() {
 
 func (this *Suite) testBitbucketHg(ignoreCheckoutFiles bool) {
 	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutBitbucketTarball(
+	checkoutTarball, err := client.CheckoutTarball(
 		&BitbucketCheckoutOptions{
-			Type:        BitbucketTypeHg,
-			User:        "durin42",
-			Repository:  "hg-git",
-			ChangesetId: testHgGitChangesetId,
+			BitbucketType: BitbucketTypeHg,
+			User:          "durin42",
+			Repository:    "hg-git",
+			ChangesetId:   testHgGitChangesetId,
 			//SecurityOptions: NewHgSecurityOptionsSsh(this.getSshOptions()),
 		},
 	)
@@ -198,7 +198,7 @@ func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreChe
 	require.NoError(this.T(), clientProvider.Destroy())
 }
 
-func (this *Suite) getSshOptions() *SshOptions {
+func (this *Suite) getSshOptions() *SshSecurityOptions {
 	privateKeyReader, err := os.Open(os.Getenv("HOME") + "/.ssh/id_rsa")
 	require.NoError(this.T(), err)
 	defer privateKeyReader.Close()
@@ -207,7 +207,7 @@ func (this *Suite) getSshOptions() *SshOptions {
 	var buffer bytes.Buffer
 	_, err = buffer.Write(data)
 	require.NoError(this.T(), err)
-	return &SshOptions{
+	return &SshSecurityOptions{
 		StrictHostKeyChecking: false,
 		PrivateKey:            &buffer,
 	}

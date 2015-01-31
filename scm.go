@@ -6,13 +6,21 @@ import (
 	"github.com/peter-edge/go-exec"
 )
 
+type CheckoutOptions interface {
+	Type() CheckoutType
+}
+
 type GitCheckoutOptions struct {
 	User            string
 	Host            string
 	Path            string
 	Branch          string
 	CommitId        string
-	SecurityOptions *GitSecurityOptions
+	SecurityOptions SecurityOptions
+}
+
+func (this *GitCheckoutOptions) Type() CheckoutType {
+	return CheckoutTypeGit
 }
 
 type GithubCheckoutOptions struct {
@@ -20,7 +28,11 @@ type GithubCheckoutOptions struct {
 	Repository      string
 	Branch          string
 	CommitId        string
-	SecurityOptions *GithubSecurityOptions
+	SecurityOptions SecurityOptions
+}
+
+func (this *GithubCheckoutOptions) Type() CheckoutType {
+	return CheckoutTypeGithub
 }
 
 type HgCheckoutOptions struct {
@@ -28,17 +40,25 @@ type HgCheckoutOptions struct {
 	Host            string
 	Path            string
 	ChangesetId     string
-	SecurityOptions *HgSecurityOptions
+	SecurityOptions SecurityOptions
+}
+
+func (this *HgCheckoutOptions) Type() CheckoutType {
+	return CheckoutTypeHg
 }
 
 type BitbucketCheckoutOptions struct {
-	Type            BitbucketType
+	BitbucketType   BitbucketType
 	User            string
 	Repository      string
 	Branch          string // only set if BitbucketType == BitbucketTypeGit
 	CommitId        string // only set if BitbucketType == BitbucketTypeGit
 	ChangesetId     string // only set if BitbucketType == BitbucketTypeHg
-	SecurityOptions *BitbucketSecurityOptions
+	SecurityOptions SecurityOptions
+}
+
+func (this *BitbucketCheckoutOptions) Type() CheckoutType {
+	return CheckoutTypeBitbucket
 }
 
 type ClientOptions struct {
@@ -46,10 +66,7 @@ type ClientOptions struct {
 }
 
 type Client interface {
-	CheckoutGitTarball(*GitCheckoutOptions) (io.Reader, error)
-	CheckoutGithubTarball(*GithubCheckoutOptions) (io.Reader, error)
-	CheckoutHgTarball(*HgCheckoutOptions) (io.Reader, error)
-	CheckoutBitbucketTarball(*BitbucketCheckoutOptions) (io.Reader, error)
+	CheckoutTarball(CheckoutOptions) (io.Reader, error)
 }
 
 func NewClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) Client {

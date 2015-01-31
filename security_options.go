@@ -3,105 +3,22 @@ package scm
 import "io"
 
 type SecurityOptions interface {
-	securityType() securityType
-	sshOptions() *SshOptions
-	accessTokenOptions() *AccessTokenOptions
+	SecurityType() SecurityType
 }
 
-type SshOptions struct {
+type SshSecurityOptions struct {
 	StrictHostKeyChecking bool
 	PrivateKey            io.Reader
 }
 
-type AccessTokenOptions struct {
+func (this *SshSecurityOptions) SecurityType() SecurityType {
+	return SecurityTypeSsh
+}
+
+type AccessTokenSecurityOptions struct {
 	AccessToken string
 }
 
-type GitSecurityOptions struct {
-	securityType_ securityType
-	sshOptions_   *SshOptions
-}
-
-func NewGitSecurityOptionsSsh(sshOptions *SshOptions) *GitSecurityOptions {
-	return &GitSecurityOptions{securityTypeSsh, sshOptions}
-}
-
-func (this *GitSecurityOptions) securityType() securityType {
-	return this.securityType_
-}
-
-func (this *GitSecurityOptions) sshOptions() *SshOptions {
-	return this.sshOptions_
-}
-
-func (this *GitSecurityOptions) accessTokenOptions() *AccessTokenOptions {
-	return nil
-}
-
-type GithubSecurityOptions struct {
-	securityType_       securityType
-	sshOptions_         *SshOptions
-	accessTokenOptions_ *AccessTokenOptions
-}
-
-func NewGithubSecurityOptionsSsh(sshOptions *SshOptions) *GithubSecurityOptions {
-	return &GithubSecurityOptions{securityTypeSsh, sshOptions, nil}
-}
-
-func NewGithubSecurityOptionsAccessToken(accessTokenOptions *AccessTokenOptions) *GithubSecurityOptions {
-	return &GithubSecurityOptions{securityTypeAccessToken, nil, accessTokenOptions}
-}
-
-func (this *GithubSecurityOptions) securityType() securityType {
-	return this.securityType_
-}
-
-func (this *GithubSecurityOptions) sshOptions() *SshOptions {
-	return this.sshOptions_
-}
-
-func (this *GithubSecurityOptions) accessTokenOptions() *AccessTokenOptions {
-	return this.accessTokenOptions_
-}
-
-type HgSecurityOptions struct {
-	securityType_ securityType
-	sshOptions_   *SshOptions
-}
-
-func NewHgSecurityOptionsSsh(sshOptions *SshOptions) *HgSecurityOptions {
-	return &HgSecurityOptions{securityTypeSsh, sshOptions}
-}
-
-func (this *HgSecurityOptions) securityType() securityType {
-	return this.securityType_
-}
-
-func (this *HgSecurityOptions) sshOptions() *SshOptions {
-	return this.sshOptions_
-}
-
-func (this *HgSecurityOptions) accessTokenOptions() *AccessTokenOptions {
-	return nil
-}
-
-type BitbucketSecurityOptions struct {
-	securityType_ securityType
-	sshOptions_   *SshOptions
-}
-
-func NewBitbucketSecurityOptionsSsh(sshOptions *SshOptions) *BitbucketSecurityOptions {
-	return &BitbucketSecurityOptions{securityTypeSsh, sshOptions}
-}
-
-func (this *BitbucketSecurityOptions) securityType() securityType {
-	return this.securityType_
-}
-
-func (this *BitbucketSecurityOptions) sshOptions() *SshOptions {
-	return this.sshOptions_
-}
-
-func (this *BitbucketSecurityOptions) accessTokenOptions() *AccessTokenOptions {
-	return nil
+func (this *AccessTokenSecurityOptions) SecurityType() SecurityType {
+	return SecurityTypeAccessToken
 }

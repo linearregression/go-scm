@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-const (
-	BitbucketTypeGit = iota
-	BitbucketTypeHg
-)
-
 var (
+	BitbucketTypeGit BitbucketType = 0
+	BitbucketTypeHg  BitbucketType = 1
+
 	bitbucketTypeToString = map[BitbucketType]string{
 		BitbucketTypeGit: "git",
 		BitbucketTypeHg:  "hg",
@@ -23,13 +21,6 @@ var (
 )
 
 type BitbucketType uint
-
-func AllBitbucketTypes() []BitbucketType {
-	return []BitbucketType{
-		BitbucketTypeGit,
-		BitbucketTypeHg,
-	}
-}
 
 func BitbucketTypeOf(s string) (BitbucketType, error) {
 	bitbucketType, ok := stringToBitbucketType[s]

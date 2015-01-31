@@ -8,5 +8,6 @@ var (
 	ErrRequiredFieldMissing   = errors.New("scm: required field missing")
 	ErrFieldShouldNotBeSet    = errors.New("scm: field should not be set")
 	ErrSecurityNotImplemented = errors.New("scm: security not implemented")
+	ErrUnknownCheckoutType    = errors.New("scm: unknown CheckoutType")
 	ErrUnknownBitbucketType   = errors.New("scm: unknown BitbucketType")
 )
