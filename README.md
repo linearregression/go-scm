@@ -19,66 +19,58 @@ Git SSH requires Git 2.3.0.
 
 ## Usage
 
+#### func  ValidBitbucketType
+
 ```go
-const (
-	BitbucketTypeGit = iota
-	BitbucketTypeHg
-)
+func ValidBitbucketType(s string) bool
 ```
 
+#### func  ValidCheckoutType
+
 ```go
-var (
-	ErrNil                    = errors.New("scm: nil")
-	ErrWrongSecurityType      = errors.New("scm: wrong security type")
-	ErrRequiredFieldMissing   = errors.New("scm: required field missing")
-	ErrFieldShouldNotBeSet    = errors.New("scm: field should not be set")
-	ErrSecurityNotImplemented = errors.New("scm: security not implemented")
-	ErrUnknownBitbucketType   = errors.New("scm: unknown BitbucketType")
-)
+func ValidCheckoutType(s string) bool
 ```
 
-#### func  AllBitbucketTypes
+#### func  ValidSecurityType
 
 ```go
-func AllBitbucketTypes() []BitbucketType
+func ValidSecurityType(s string) bool
 ```
 
-#### type AccessTokenOptions
+#### type AccessTokenSecurityOptions
 
 ```go
-type AccessTokenOptions struct {
+type AccessTokenSecurityOptions struct {
 	AccessToken string
 }
 ```
 
 
+#### func (*AccessTokenSecurityOptions) SecurityType
+
+```go
+func (this *AccessTokenSecurityOptions) SecurityType() SecurityType
+```
+
 #### type BitbucketCheckoutOptions
 
 ```go
 type BitbucketCheckoutOptions struct {
-	Type            BitbucketType
+	BitbucketType   BitbucketType
 	User            string
 	Repository      string
 	Branch          string // only set if BitbucketType == BitbucketTypeGit
 	CommitId        string // only set if BitbucketType == BitbucketTypeGit
 	ChangesetId     string // only set if BitbucketType == BitbucketTypeHg
-	SecurityOptions *BitbucketSecurityOptions
+	SecurityOptions SecurityOptions
 }
 ```
 
 
-#### type BitbucketSecurityOptions
+#### func (*BitbucketCheckoutOptions) Type
 
 ```go
-type BitbucketSecurityOptions struct {
-}
-```
-
-
-#### func  NewBitbucketSecurityOptionsSsh
-
-```go
-func NewBitbucketSecurityOptionsSsh(sshOptions *SshOptions) *BitbucketSecurityOptions
+func (this *BitbucketCheckoutOptions) Type() CheckoutType
 ```
 
 #### type BitbucketType
@@ -87,6 +79,13 @@ func NewBitbucketSecurityOptionsSsh(sshOptions *SshOptions) *BitbucketSecurityOp
 type BitbucketType uint
 ```
 
+
+```go
+var (
+	BitbucketTypeGit BitbucketType = 0
+	BitbucketTypeHg  BitbucketType = 1
+)
+```
 
 #### func  BitbucketTypeOf
 
@@ -100,14 +99,48 @@ func BitbucketTypeOf(s string) (BitbucketType, error)
 func (this BitbucketType) String() string
 ```
 
+#### type CheckoutOptions
+
+```go
+type CheckoutOptions interface {
+	Type() CheckoutType
+}
+```
+
+
+#### type CheckoutType
+
+```go
+type CheckoutType uint
+```
+
+
+```go
+var (
+	CheckoutTypeGit       CheckoutType = 0
+	CheckoutTypeGithub    CheckoutType = 1
+	CheckoutTypeHg        CheckoutType = 2
+	CheckoutTypeBitbucket CheckoutType = 3
+)
+```
+
+#### func  CheckoutTypeOf
+
+```go
+func CheckoutTypeOf(s string) (CheckoutType, error)
+```
+
+#### func (CheckoutType) String
+
+```go
+func (this CheckoutType) String() string
+```
+
 #### type Client
 
 ```go
 type Client interface {
-	CheckoutGitTarball(*GitCheckoutOptions) (io.Reader, error)
-	CheckoutGithubTarball(*GithubCheckoutOptions) (io.Reader, error)
-	CheckoutHgTarball(*HgCheckoutOptions) (io.Reader, error)
-	CheckoutBitbucketTarball(*BitbucketCheckoutOptions) (io.Reader, error)
+	CheckoutTarball(CheckoutOptions) (io.Reader, error)
 }
 ```
 
@@ -136,23 +169,15 @@ type GitCheckoutOptions struct {
 	Path            string
 	Branch          string
 	CommitId        string
-	SecurityOptions *GitSecurityOptions
+	SecurityOptions SecurityOptions
 }
 ```
 
 
-#### type GitSecurityOptions
+#### func (*GitCheckoutOptions) Type
 
 ```go
-type GitSecurityOptions struct {
-}
-```
-
-
-#### func  NewGitSecurityOptionsSsh
-
-```go
-func NewGitSecurityOptionsSsh(sshOptions *SshOptions) *GitSecurityOptions
+func (this *GitCheckoutOptions) Type() CheckoutType
 ```
 
 #### type GithubCheckoutOptions
@@ -163,29 +188,15 @@ type GithubCheckoutOptions struct {
 	Repository      string
 	Branch          string
 	CommitId        string
-	SecurityOptions *GithubSecurityOptions
+	SecurityOptions SecurityOptions
 }
 ```
 
 
-#### type GithubSecurityOptions
+#### func (*GithubCheckoutOptions) Type
 
 ```go
-type GithubSecurityOptions struct {
-}
-```
-
-
-#### func  NewGithubSecurityOptionsAccessToken
-
-```go
-func NewGithubSecurityOptionsAccessToken(accessTokenOptions *AccessTokenOptions) *GithubSecurityOptions
-```
-
-#### func  NewGithubSecurityOptionsSsh
-
-```go
-func NewGithubSecurityOptionsSsh(sshOptions *SshOptions) *GithubSecurityOptions
+func (this *GithubCheckoutOptions) Type() CheckoutType
 ```
 
 #### type HgCheckoutOptions
@@ -196,39 +207,92 @@ type HgCheckoutOptions struct {
 	Host            string
 	Path            string
 	ChangesetId     string
-	SecurityOptions *HgSecurityOptions
+	SecurityOptions SecurityOptions
 }
 ```
 
 
-#### type HgSecurityOptions
+#### func (*HgCheckoutOptions) Type
 
 ```go
-type HgSecurityOptions struct {
-}
-```
-
-
-#### func  NewHgSecurityOptionsSsh
-
-```go
-func NewHgSecurityOptionsSsh(sshOptions *SshOptions) *HgSecurityOptions
+func (this *HgCheckoutOptions) Type() CheckoutType
 ```
 
 #### type SecurityOptions
 
 ```go
 type SecurityOptions interface {
-	// contains filtered or unexported methods
+	SecurityType() SecurityType
 }
 ```
 
 
-#### type SshOptions
+#### type SecurityType
 
 ```go
-type SshOptions struct {
+type SecurityType uint
+```
+
+
+```go
+var (
+	SecurityTypeSsh         SecurityType = 0
+	SecurityTypeAccessToken SecurityType = 1
+)
+```
+
+#### func  SecurityTypeOf
+
+```go
+func SecurityTypeOf(s string) (SecurityType, error)
+```
+
+#### func (SecurityType) String
+
+```go
+func (this SecurityType) String() string
+```
+
+#### type SshSecurityOptions
+
+```go
+type SshSecurityOptions struct {
 	StrictHostKeyChecking bool
 	PrivateKey            io.Reader
 }
+```
+
+
+#### func (*SshSecurityOptions) SecurityType
+
+```go
+func (this *SshSecurityOptions) SecurityType() SecurityType
+```
+
+#### type ValidationError
+
+```go
+type ValidationError interface {
+	error
+	Type() ValidationErrorType
+}
+```
+
+
+#### type ValidationErrorType
+
+```go
+type ValidationErrorType string
+```
+
+
+```go
+var (
+	ValidationErrorTypeRequiredFieldMissing                  ValidationErrorType = "RequiredFieldMissing"
+	ValidationErrorTypeFieldShouldNotBeSet                   ValidationErrorType = "FieldShouldNotBeSet"
+	ValidationErrorTypeSecurityNotImplementedForCheckoutType ValidationErrorType = "SecurityNotImplementedForCheckoutType"
+	ValidationErrorTypeUnknownCheckoutType                   ValidationErrorType = "UnknownCheckoutType"
+	ValidationErrorTypeUnknownSecurityType                   ValidationErrorType = "UnknownSecurityType"
+	ValidationErrorTypeUnknownBitbucketType                  ValidationErrorType = "UnknownBitbucketType"
+)
 ```

@@ -22,6 +22,11 @@ var (
 
 type SecurityType uint
 
+func ValidSecurityType(s string) bool {
+	_, ok := stringToSecurityType[s]
+	return ok
+}
+
 func SecurityTypeOf(s string) (SecurityType, error) {
 	SecurityType, ok := stringToSecurityType[s]
 	if !ok {

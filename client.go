@@ -24,6 +24,9 @@ type client struct {
 }
 
 func (this *client) CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader, error) {
+	if err := validateCheckoutOptions(checkoutOptions); err != nil {
+		return nil, err
+	}
 	switch checkoutOptions.Type() {
 	case CheckoutTypeGit:
 		return this.checkoutGitTarball(checkoutOptions.(*GitCheckoutOptions))
@@ -34,14 +37,11 @@ func (this *client) CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader,
 	case CheckoutTypeBitbucket:
 		return this.checkoutBitbucketTarball(checkoutOptions.(*BitbucketCheckoutOptions))
 	default:
-		return nil, ErrUnknownCheckoutType
+		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String()))
 	}
 }
 
 func (this *client) checkoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (reader io.Reader, retErr error) {
-	if err := validateGitCheckoutOptions(gitCheckoutOptions); err != nil {
-		return nil, err
-	}
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
@@ -66,9 +66,6 @@ func (this *client) checkoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (
 }
 
 func (this *client) checkoutGithubTarball(githubCheckoutOptions *GithubCheckoutOptions) (reader io.Reader, retErr error) {
-	if err := validateGithubCheckoutOptions(githubCheckoutOptions); err != nil {
-		return nil, err
-	}
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
@@ -93,9 +90,6 @@ func (this *client) checkoutGithubTarball(githubCheckoutOptions *GithubCheckoutO
 }
 
 func (this *client) checkoutHgTarball(hgCheckoutOptions *HgCheckoutOptions) (reader io.Reader, retErr error) {
-	if err := validateHgCheckoutOptions(hgCheckoutOptions); err != nil {
-		return nil, err
-	}
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
@@ -120,9 +114,6 @@ func (this *client) checkoutHgTarball(hgCheckoutOptions *HgCheckoutOptions) (rea
 }
 
 func (this *client) checkoutBitbucketTarball(bitbucketCheckoutOptions *BitbucketCheckoutOptions) (reader io.Reader, retErr error) {
-	if err := validateBitbucketCheckoutOptions(bitbucketCheckoutOptions); err != nil {
-		return nil, err
-	}
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
@@ -149,7 +140,7 @@ func (this *client) checkoutBitbucketTarball(bitbucketCheckoutOptions *Bitbucket
 	case BitbucketTypeHg:
 		return this.checkoutHg(sshCommand, url, bitbucketCheckoutOptions.ChangesetId)
 	default:
-		return nil, ErrUnknownBitbucketType
+		return nil, newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String()))
 	}
 }
 
@@ -242,7 +233,12 @@ func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
 			gitCheckoutOptions.Path,
 		), nil
 	}
-	return "", ErrSecurityNotImplemented
+	return "", newInternalError(
+		newValidationErrorSecurityNotImplementedForCheckoutType(
+			gitCheckoutOptions.Type().String(),
+			gitCheckoutOptions.SecurityOptions.SecurityType().String(),
+		),
+	)
 }
 
 func getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) (string, error) {
@@ -261,7 +257,12 @@ func getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) (string, error) 
 			joinStrings("/", githubCheckoutOptions.User, "/", githubCheckoutOptions.Repository, ".git"),
 		), nil
 	}
-	return "", ErrSecurityNotImplemented
+	return "", newInternalError(
+		newValidationErrorSecurityNotImplementedForCheckoutType(
+			githubCheckoutOptions.Type().String(),
+			githubCheckoutOptions.SecurityOptions.SecurityType().String(),
+		),
+	)
 }
 
 func getHgUrl(hgCheckoutOptions *HgCheckoutOptions) (string, error) {
@@ -273,7 +274,12 @@ func getHgUrl(hgCheckoutOptions *HgCheckoutOptions) (string, error) {
 			hgCheckoutOptions.Path,
 		), nil
 	}
-	return "", ErrSecurityNotImplemented
+	return "", newInternalError(
+		newValidationErrorSecurityNotImplementedForCheckoutType(
+			hgCheckoutOptions.Type().String(),
+			hgCheckoutOptions.SecurityOptions.SecurityType().String(),
+		),
+	)
 }
 
 func getBitbucketUrl(bitbucketCheckoutOptions *BitbucketCheckoutOptions) (string, error) {
@@ -294,10 +300,15 @@ func getBitbucketUrl(bitbucketCheckoutOptions *BitbucketCheckoutOptions) (string
 				joinStrings("/", bitbucketCheckoutOptions.User, "/", bitbucketCheckoutOptions.Repository),
 			), nil
 		default:
-			return "", ErrUnknownBitbucketType
+			return "", newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.Type().String()))
 		}
 	}
-	return "", ErrSecurityNotImplemented
+	return "", newInternalError(
+		newValidationErrorSecurityNotImplementedForCheckoutType(
+			bitbucketCheckoutOptions.Type().String(),
+			bitbucketCheckoutOptions.SecurityOptions.SecurityType().String(),
+		),
+	)
 }
 
 func getSshUrl(base string, user string, host string, path string) string {
@@ -401,91 +412,6 @@ func fileMatches(readFileManager exec.ReadFileManager, patterns []string, path s
 		}
 	}
 	return false, nil
-}
-
-func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) error {
-	if gitCheckoutOptions.User == "" {
-		return ErrRequiredFieldMissing
-	}
-	if gitCheckoutOptions.Host == "" {
-		return ErrRequiredFieldMissing
-	}
-	if gitCheckoutOptions.Path == "" {
-		return ErrRequiredFieldMissing
-	}
-	if gitCheckoutOptions.Branch == "" {
-		return ErrRequiredFieldMissing
-	}
-	if gitCheckoutOptions.CommitId == "" {
-		return ErrRequiredFieldMissing
-	}
-	return nil
-}
-
-func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions) error {
-	if githubCheckoutOptions.User == "" {
-		return ErrRequiredFieldMissing
-	}
-	if githubCheckoutOptions.Repository == "" {
-		return ErrRequiredFieldMissing
-	}
-	if githubCheckoutOptions.Branch == "" {
-		return ErrRequiredFieldMissing
-	}
-	if githubCheckoutOptions.CommitId == "" {
-		return ErrRequiredFieldMissing
-	}
-	return nil
-}
-
-func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) error {
-	if hgCheckoutOptions.User == "" {
-		return ErrRequiredFieldMissing
-	}
-	if hgCheckoutOptions.Host == "" {
-		return ErrRequiredFieldMissing
-	}
-	if hgCheckoutOptions.Path == "" {
-		return ErrRequiredFieldMissing
-	}
-	if hgCheckoutOptions.ChangesetId == "" {
-		return ErrRequiredFieldMissing
-	}
-	return nil
-}
-
-func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error {
-	if bitbucketCheckoutOptions.User == "" {
-		return ErrRequiredFieldMissing
-	}
-	if bitbucketCheckoutOptions.Repository == "" {
-		return ErrRequiredFieldMissing
-	}
-	switch bitbucketCheckoutOptions.BitbucketType {
-	case BitbucketTypeGit:
-		if bitbucketCheckoutOptions.Branch == "" {
-			return ErrRequiredFieldMissing
-		}
-		if bitbucketCheckoutOptions.CommitId == "" {
-			return ErrRequiredFieldMissing
-		}
-		if bitbucketCheckoutOptions.ChangesetId != "" {
-			return ErrFieldShouldNotBeSet
-		}
-	case BitbucketTypeHg:
-		if bitbucketCheckoutOptions.Branch != "" {
-			return ErrFieldShouldNotBeSet
-		}
-		if bitbucketCheckoutOptions.CommitId != "" {
-			return ErrFieldShouldNotBeSet
-		}
-		if bitbucketCheckoutOptions.ChangesetId == "" {
-			return ErrRequiredFieldMissing
-		}
-	default:
-		return ErrUnknownBitbucketType
-	}
-	return nil
 }
 
 func joinStrings(elems ...string) string {

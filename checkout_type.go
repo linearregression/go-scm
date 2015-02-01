@@ -28,6 +28,11 @@ var (
 
 type CheckoutType uint
 
+func ValidCheckoutType(s string) bool {
+	_, ok := stringToCheckoutType[s]
+	return ok
+}
+
 func CheckoutTypeOf(s string) (CheckoutType, error) {
 	checkoutType, ok := stringToCheckoutType[s]
 	if !ok {

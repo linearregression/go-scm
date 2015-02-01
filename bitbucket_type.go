@@ -22,6 +22,11 @@ var (
 
 type BitbucketType uint
 
+func ValidBitbucketType(s string) bool {
+	_, ok := stringToBitbucketType[s]
+	return ok
+}
+
 func BitbucketTypeOf(s string) (BitbucketType, error) {
 	bitbucketType, ok := stringToBitbucketType[s]
 	if !ok {
