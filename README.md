@@ -46,10 +46,10 @@ type AccessTokenSecurityOptions struct {
 ```
 
 
-#### func (*AccessTokenSecurityOptions) SecurityType
+#### func (*AccessTokenSecurityOptions) Type
 
 ```go
-func (this *AccessTokenSecurityOptions) SecurityType() SecurityType
+func (this *AccessTokenSecurityOptions) Type() SecurityType
 ```
 
 #### type BitbucketCheckoutOptions
@@ -160,6 +160,51 @@ type ClientOptions struct {
 ```
 
 
+#### type ExternalCheckoutOptions
+
+```go
+type ExternalCheckoutOptions struct {
+	Type            string                   `json:"type,omitempty" yaml:"type,omitempty"`
+	User            string                   `json:"user,omitempty" yaml:"user,omitempty"`
+	Host            string                   `json:"host,omitempty" yaml:"host,omitempty"`
+	Path            string                   `json:"path,omitempty" yaml:"path,omitempty"`
+	Repository      string                   `json:"repository,omitempty" yaml:"repository,omitempty"`
+	Branch          string                   `json:"branch,omitempty" yaml:"branch,omitempty"`
+	CommitId        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
+	BitbucketType   string                   `json:"bitbucket_type,omitempty" yaml:"bitbucket_type,omitempty"`
+	ChangesetId     string                   `json:"changeset_id,omitempty" yaml:"changeset_id,omitempty"`
+	SecurityOptions *ExternalSecurityOptions `json:"security_options,omitempty" yaml:"security_options,omitempty"`
+}
+```
+
+
+#### type ExternalClient
+
+```go
+type ExternalClient interface {
+	CheckoutTarball(ExternalCheckoutOptions) (io.Reader, error)
+}
+```
+
+
+#### func  NewExternalClient
+
+```go
+func NewExternalClient(client Client) ExternalClient
+```
+
+#### type ExternalSecurityOptions
+
+```go
+type ExternalSecurityOptions struct {
+	Type                  string `json:"type,omitempty" yaml:"type,omitempty"`
+	StrictHostKeyChecking bool   `json:"strict_host_key_checking,omitempty" yaml:"strict_host_key_checking,omitempty"`
+	PrivateKey            string `json:"private_key,omitempty" yaml:"private_key,omitempty"`
+	AccessToken           string `json:"access_token,omitempty" yaml:"access_token,omitempty"`
+}
+```
+
+
 #### type GitCheckoutOptions
 
 ```go
@@ -222,7 +267,7 @@ func (this *HgCheckoutOptions) Type() CheckoutType
 
 ```go
 type SecurityOptions interface {
-	SecurityType() SecurityType
+	Type() SecurityType
 }
 ```
 
@@ -263,10 +308,10 @@ type SshSecurityOptions struct {
 ```
 
 
-#### func (*SshSecurityOptions) SecurityType
+#### func (*SshSecurityOptions) Type
 
 ```go
-func (this *SshSecurityOptions) SecurityType() SecurityType
+func (this *SshSecurityOptions) Type() SecurityType
 ```
 
 #### type ValidationError
