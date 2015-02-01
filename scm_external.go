@@ -27,6 +27,5 @@ type ExternalClient interface {
 }
 
 func NewExternalClient(client Client) ExternalClient {
-	return nil
-	//return newExternalClient(client)
+	return newExternalClient(client)
 }
