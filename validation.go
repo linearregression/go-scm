@@ -121,16 +121,16 @@ func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckou
 }
 
 func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutType, allowedTypes ...SecurityType) ValidationError {
-	if !isAllowedSecurityType(securityOptions.SecurityType(), allowedTypes) {
-		return newValidationErrorSecurityNotImplementedForCheckoutType(securityOptions.SecurityType().String(), checkoutType.String())
+	if !isAllowedSecurityType(securityOptions.Type(), allowedTypes) {
+		return newValidationErrorSecurityNotImplementedForCheckoutType(securityOptions.Type().String(), checkoutType.String())
 	}
-	switch securityOptions.SecurityType() {
+	switch securityOptions.Type() {
 	case SecurityTypeSsh:
 		return validateSshSecurityOptions(securityOptions.(*SshSecurityOptions))
 	case SecurityTypeAccessToken:
 		return validateAccessTokenSecurityOptions(securityOptions.(*AccessTokenSecurityOptions))
 	default:
-		return newValidationErrorUnknownSecurityType(securityOptions.SecurityType().String())
+		return newValidationErrorUnknownSecurityType(securityOptions.Type().String())
 	}
 	return nil
 }

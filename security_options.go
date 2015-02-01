@@ -3,7 +3,7 @@ package scm
 import "io"
 
 type SecurityOptions interface {
-	SecurityType() SecurityType
+	Type() SecurityType
 }
 
 type SshSecurityOptions struct {
@@ -11,7 +11,7 @@ type SshSecurityOptions struct {
 	PrivateKey            io.Reader
 }
 
-func (this *SshSecurityOptions) SecurityType() SecurityType {
+func (this *SshSecurityOptions) Type() SecurityType {
 	return SecurityTypeSsh
 }
 
@@ -19,6 +19,6 @@ type AccessTokenSecurityOptions struct {
 	AccessToken string
 }
 
-func (this *AccessTokenSecurityOptions) SecurityType() SecurityType {
+func (this *AccessTokenSecurityOptions) Type() SecurityType {
 	return SecurityTypeAccessToken
 }
