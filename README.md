@@ -19,24 +19,6 @@ Git SSH requires Git 2.3.0.
 
 ## Usage
 
-#### func  ValidBitbucketType
-
-```go
-func ValidBitbucketType(s string) bool
-```
-
-#### func  ValidCheckoutType
-
-```go
-func ValidCheckoutType(s string) bool
-```
-
-#### func  ValidSecurityType
-
-```go
-func ValidSecurityType(s string) bool
-```
-
 #### type AccessTokenSecurityOptions
 
 ```go
@@ -87,18 +69,6 @@ var (
 )
 ```
 
-#### func  BitbucketTypeOf
-
-```go
-func BitbucketTypeOf(s string) (BitbucketType, error)
-```
-
-#### func (BitbucketType) String
-
-```go
-func (this BitbucketType) String() string
-```
-
 #### type CheckoutOptions
 
 ```go
@@ -122,18 +92,6 @@ var (
 	CheckoutTypeHg        CheckoutType = 2
 	CheckoutTypeBitbucket CheckoutType = 3
 )
-```
-
-#### func  CheckoutTypeOf
-
-```go
-func CheckoutTypeOf(s string) (CheckoutType, error)
-```
-
-#### func (CheckoutType) String
-
-```go
-func (this CheckoutType) String() string
 ```
 
 #### type Client
@@ -182,7 +140,7 @@ type ExternalCheckoutOptions struct {
 
 ```go
 type ExternalClient interface {
-	CheckoutTarball(ExternalCheckoutOptions) (io.Reader, error)
+	CheckoutTarball(*ExternalCheckoutOptions) (io.Reader, error)
 }
 ```
 
@@ -284,18 +242,6 @@ var (
 	SecurityTypeSsh         SecurityType = 0
 	SecurityTypeAccessToken SecurityType = 1
 )
-```
-
-#### func  SecurityTypeOf
-
-```go
-func SecurityTypeOf(s string) (SecurityType, error)
-```
-
-#### func (SecurityType) String
-
-```go
-func (this SecurityType) String() string
 ```
 
 #### type SshSecurityOptions

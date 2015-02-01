@@ -28,12 +28,12 @@ var (
 
 type CheckoutType uint
 
-func ValidCheckoutType(s string) bool {
+func validCheckoutType(s string) bool {
 	_, ok := stringToCheckoutType[s]
 	return ok
 }
 
-func CheckoutTypeOf(s string) (CheckoutType, error) {
+func checkoutTypeOf(s string) (CheckoutType, error) {
 	checkoutType, ok := stringToCheckoutType[s]
 	if !ok {
 		return 0, errors.New(unknownCheckoutType(s))
@@ -41,7 +41,7 @@ func CheckoutTypeOf(s string) (CheckoutType, error) {
 	return checkoutType, nil
 }
 
-func (this CheckoutType) String() string {
+func (this CheckoutType) string() string {
 	if int(this) < lenCheckoutTypeToString {
 		return checkoutTypeToString[this]
 	}
@@ -49,5 +49,5 @@ func (this CheckoutType) String() string {
 }
 
 func unknownCheckoutType(unknownCheckoutType interface{}) string {
-	return fmt.Sprintf("Unknown CheckoutType: %v", unknownCheckoutType)
+	return fmt.Sprintf("scm: unknown CheckoutType: %v", unknownCheckoutType)
 }

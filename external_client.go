@@ -24,10 +24,10 @@ func (this *externalClient) CheckoutTarball(externalCheckoutOptions *ExternalChe
 func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
 	var securityOptions SecurityOptions
 	if externalCheckoutOptions.SecurityOptions != nil {
-		if !ValidSecurityType(externalCheckoutOptions.SecurityOptions.Type) {
+		if !validSecurityType(externalCheckoutOptions.SecurityOptions.Type) {
 			return nil, newValidationErrorUnknownSecurityType(externalCheckoutOptions.Type)
 		}
-		securityType, err := SecurityTypeOf(externalCheckoutOptions.SecurityOptions.Type)
+		securityType, err := securityTypeOf(externalCheckoutOptions.SecurityOptions.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -44,13 +44,13 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
 			}
 		default:
-			return nil, newInternalError(newValidationErrorUnknownSecurityType(securityType.String()))
+			return nil, newInternalError(newValidationErrorUnknownSecurityType(securityType.string()))
 		}
 	}
-	if !ValidCheckoutType(externalCheckoutOptions.Type) {
+	if !validCheckoutType(externalCheckoutOptions.Type) {
 		return nil, newValidationErrorUnknownCheckoutType(externalCheckoutOptions.Type)
 	}
-	checkoutType, err := CheckoutTypeOf(externalCheckoutOptions.Type)
+	checkoutType, err := checkoutTypeOf(externalCheckoutOptions.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,13 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			SecurityOptions: securityOptions,
 		}, nil
 	case CheckoutTypeBitbucket:
-		bitbucketType, _ := BitbucketTypeOf(externalCheckoutOptions.BitbucketType)
+		if !validBitbucketType(externalCheckoutOptions.BitbucketType) {
+			return nil, newValidationErrorUnknownBitbucketType(externalCheckoutOptions.BitbucketType)
+		}
+		bitbucketType, err := bitbucketTypeOf(externalCheckoutOptions.BitbucketType)
+		if err != nil {
+			return nil, err
+		}
 		return &BitbucketCheckoutOptions{
 			BitbucketType:   bitbucketType,
 			User:            externalCheckoutOptions.User,
@@ -92,6 +98,6 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			SecurityOptions: securityOptions,
 		}, nil
 	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutType.String()))
+		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutType.string()))
 	}
 }

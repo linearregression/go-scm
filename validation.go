@@ -11,7 +11,7 @@ func validateCheckoutOptions(checkoutOptions CheckoutOptions) ValidationError {
 	case CheckoutTypeBitbucket:
 		return validateBitbucketCheckoutOptions(checkoutOptions.(*BitbucketCheckoutOptions))
 	default:
-		return newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String())
+		return newValidationErrorUnknownCheckoutType(checkoutOptions.Type().string())
 	}
 }
 
@@ -110,7 +110,7 @@ func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckou
 			return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "ChangesetId")
 		}
 	default:
-		return newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String())
+		return newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.string())
 	}
 	if bitbucketCheckoutOptions.SecurityOptions != nil {
 		if err := validateSecurityOptions(bitbucketCheckoutOptions.SecurityOptions, CheckoutTypeBitbucket, SecurityTypeSsh); err != nil {
@@ -122,7 +122,7 @@ func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckou
 
 func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutType, allowedTypes ...SecurityType) ValidationError {
 	if !isAllowedSecurityType(securityOptions.Type(), allowedTypes) {
-		return newValidationErrorSecurityNotImplementedForCheckoutType(securityOptions.Type().String(), checkoutType.String())
+		return newValidationErrorSecurityNotImplementedForCheckoutType(securityOptions.Type().string(), checkoutType.string())
 	}
 	switch securityOptions.Type() {
 	case SecurityTypeSsh:
@@ -130,7 +130,7 @@ func validateSecurityOptions(securityOptions SecurityOptions, checkoutType Check
 	case SecurityTypeAccessToken:
 		return validateAccessTokenSecurityOptions(securityOptions.(*AccessTokenSecurityOptions))
 	default:
-		return newValidationErrorUnknownSecurityType(securityOptions.Type().String())
+		return newValidationErrorUnknownSecurityType(securityOptions.Type().string())
 	}
 	return nil
 }

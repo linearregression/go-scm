@@ -22,12 +22,12 @@ var (
 
 type SecurityType uint
 
-func ValidSecurityType(s string) bool {
+func validSecurityType(s string) bool {
 	_, ok := stringToSecurityType[s]
 	return ok
 }
 
-func SecurityTypeOf(s string) (SecurityType, error) {
+func securityTypeOf(s string) (SecurityType, error) {
 	SecurityType, ok := stringToSecurityType[s]
 	if !ok {
 		return 0, errors.New(unknownSecurityType(s))
@@ -35,7 +35,7 @@ func SecurityTypeOf(s string) (SecurityType, error) {
 	return SecurityType, nil
 }
 
-func (this SecurityType) String() string {
+func (this SecurityType) string() string {
 	if int(this) < lenSecurityTypeToString {
 		return securityTypeToString[this]
 	}
@@ -43,5 +43,5 @@ func (this SecurityType) String() string {
 }
 
 func unknownSecurityType(unknownSecurityType interface{}) string {
-	return fmt.Sprintf("Unknown SecurityType: %v", unknownSecurityType)
+	return fmt.Sprintf("scm: unknown SecurityType: %v", unknownSecurityType)
 }
