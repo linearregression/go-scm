@@ -78,6 +78,12 @@ type CheckoutOptions interface {
 ```
 
 
+#### func  ConvertExternalCheckoutOptions
+
+```go
+func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error)
+```
+
 #### type CheckoutType
 
 ```go

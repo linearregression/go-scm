@@ -14,14 +14,14 @@ type externalClient struct {
 }
 
 func (this *externalClient) CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error) {
-	checkoutOptions, err := convertExternalCheckoutOptions(externalCheckoutOptions)
+	checkoutOptions, err := ConvertExternalCheckoutOptions(externalCheckoutOptions)
 	if err != nil {
 		return nil, err
 	}
 	return this.client.CheckoutTarball(checkoutOptions)
 }
 
-func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
+func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
 	var securityOptions SecurityOptions
 	if externalCheckoutOptions.SecurityOptions != nil {
 		if !validSecurityType(externalCheckoutOptions.SecurityOptions.Type) {
