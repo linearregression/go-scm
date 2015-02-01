@@ -23,7 +23,7 @@ type ExternalSecurityOptions struct {
 }
 
 type ExternalClient interface {
-	CheckoutTarball(ExternalCheckoutOptions) (io.Reader, error)
+	CheckoutTarball(*ExternalCheckoutOptions) (io.Reader, error)
 }
 
 func NewExternalClient(client Client) ExternalClient {
