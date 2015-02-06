@@ -136,9 +136,9 @@ func validateSecurityOptions(securityOptions SecurityOptions, checkoutType Check
 }
 
 func validateSshSecurityOptions(sshSecurityOptions *SshSecurityOptions) ValidationError {
-	if sshSecurityOptions.PrivateKey == nil {
-		return newValidationErrorRequiredFieldMissing("SshSecurityOptions", "PrivateKey")
-	}
+	//if sshSecurityOptions.PrivateKey == nil {
+	//return newValidationErrorRequiredFieldMissing("SshSecurityOptions", "PrivateKey")
+	//}
 	return nil
 }
 
