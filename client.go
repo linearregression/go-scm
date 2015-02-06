@@ -373,14 +373,27 @@ func checkoutHgWithExecutor(
 	if sshCommand != "" {
 		args = []string{"hg", "clone", "--ssh", sshCommand, url, path}
 	}
-	if err := executor.Execute(&exec.Cmd{Args: args})(); err != nil {
-		return err
-	}
-	return executor.Execute(
+	var cloneStderr bytes.Buffer
+	if err := executor.Execute(
 		&exec.Cmd{
-			Args: []string{"hg", "update", "--cwd", path, changesetId},
+			Args:   args,
+			Stderr: &cloneStderr,
 		},
-	)()
+	)(); err != nil {
+		// TODO(pedge)
+		return fmt.Errorf("CouldNotClone: %v %v", err.Error(), cloneStderr.String())
+	}
+	var updateStderr bytes.Buffer
+	if err := executor.Execute(
+		&exec.Cmd{
+			Args:   []string{"hg", "update", "--cwd", path, changesetId},
+			Stderr: &updateStderr,
+		},
+	)(); err != nil {
+		// TODO(pedge)
+		return fmt.Errorf("CouldNotUpdate: %v %v", err.Error(), updateStderr.String())
+	}
+	return nil
 }
 
 func ignoreHgCheckoutFilePatterns() []string {

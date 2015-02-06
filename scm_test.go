@@ -60,7 +60,7 @@ func (this *Suite) testGit(ignoreCheckoutFiles bool) {
 		&GitCheckoutOptions{
 			User:     "git",
 			Host:     "github.com",
-			Path:     ":peter-edge/smartystreets.git",
+			Path:     ":peter-edge/smartystreets_ruby.git",
 			Branch:   "master",
 			CommitId: testSmartystreetsCommitId,
 		},
