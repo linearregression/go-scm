@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/peter-edge/go-exec"
-	execos "github.com/peter-edge/go-exec/os"
 	tarexec "github.com/peter-edge/go-tar/exec"
 
 	"github.com/stretchr/testify/require"
@@ -35,13 +34,13 @@ func (this *Suite) SetupSuite() {
 }
 
 func (this *Suite) SetupTest() {
-	clientProvider, err := execos.NewClientProvider()
+	clientProvider, err := exec.NewClientProvider(&exec.OsExecOptions{})
 	require.NoError(this.T(), err)
 	this.clientProvider = clientProvider
 }
 
 func (this *Suite) TearDownTest() {
-	//require.NoError(this.T(), this.clientProvider.Destroy())
+	require.NoError(this.T(), this.clientProvider.Destroy())
 }
 
 func (this *Suite) TearDownSuite() {
@@ -94,9 +93,7 @@ func (this *Suite) testGithub(ignoreCheckoutFiles bool) {
 }
 
 func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
-	clientProvider, err := execos.NewClientProvider()
-	require.NoError(this.T(), err)
-	client, err := clientProvider.NewTempDirClient()
+	client, err := this.clientProvider.NewTempDirClient()
 	require.NoError(this.T(), err)
 	err = tarexec.NewUntarClient(client, nil).Untar(checkoutTarball, ".")
 	require.NoError(this.T(), err)
@@ -119,7 +116,6 @@ func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball io.Reader, i
 		require.Error(this.T(), err)
 		require.True(this.T(), os.IsNotExist(err))
 	}
-	require.NoError(this.T(), clientProvider.Destroy())
 }
 
 func (this *Suite) TestHg() {
@@ -169,9 +165,7 @@ func (this *Suite) testBitbucketHg(ignoreCheckoutFiles bool) {
 }
 
 func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
-	clientProvider, err := execos.NewClientProvider()
-	require.NoError(this.T(), err)
-	client, err := clientProvider.NewTempDirClient()
+	client, err := this.clientProvider.NewTempDirClient()
 	require.NoError(this.T(), err)
 	err = tarexec.NewUntarClient(client, nil).Untar(checkoutTarball, ".")
 	require.NoError(this.T(), err)
@@ -195,7 +189,6 @@ func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreChe
 		require.Error(this.T(), err)
 		require.True(this.T(), os.IsNotExist(err))
 	}
-	require.NoError(this.T(), clientProvider.Destroy())
 }
 
 func (this *Suite) getSshOptions() *SshSecurityOptions {

@@ -2,6 +2,7 @@ package scm
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -327,24 +328,31 @@ func checkoutGitWithExecutor(
 	commitId string,
 	path string,
 ) error {
-	var stderr bytes.Buffer
+	var cloneStderr bytes.Buffer
 	cmd := exec.Cmd{
 		// TODO(peter): if the commit id is more than 50 back, the checkout will fail
 		Args:   []string{"git", "clone", "--branch", branch, "--depth", "50", "--recursive", url, path},
-		Stderr: &stderr,
+		Stderr: &cloneStderr,
 	}
 	if gitSshCommand != "" {
 		cmd.Env = []string{"GIT_SSH_COMMAND=" + gitSshCommand}
 	}
 	if err := executor.Execute(&cmd)(); err != nil {
-		return err
+		// TODO(pedge)
+		return fmt.Errorf("CouldNotClone: %v %v", err.Error(), cloneStderr.String())
 	}
-	return executor.Execute(
+	var checkoutStderr bytes.Buffer
+	if err := executor.Execute(
 		&exec.Cmd{
 			Args:   []string{"git", "checkout", "-f", commitId},
 			SubDir: path,
+			Stderr: &checkoutStderr,
 		},
-	)()
+	)(); err != nil {
+		// TODO(pedge)
+		return fmt.Errorf("CouldNotCheckout: %v %v", err.Error(), checkoutStderr.String())
+	}
+	return nil
 }
 
 func ignoreGitCheckoutFilePatterns() []string {
