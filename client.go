@@ -226,7 +226,14 @@ func (this *client) getSshCommand(securityOptions SecurityOptions) (string, exec
 }
 
 func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
-	if gitCheckoutOptions.SecurityOptions == nil || gitCheckoutOptions.SecurityOptions.Type() == SecurityTypeSsh {
+	if gitCheckoutOptions.SecurityOptions == nil {
+		return getGitReadOnlyUrl(
+			gitCheckoutOptions.User,
+			gitCheckoutOptions.Host,
+			gitCheckoutOptions.Path,
+		), nil
+	}
+	if gitCheckoutOptions.SecurityOptions.Type() == SecurityTypeSsh {
 		return getSshUrl(
 			"",
 			gitCheckoutOptions.User,
@@ -243,7 +250,14 @@ func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
 }
 
 func getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) (string, error) {
-	if githubCheckoutOptions.SecurityOptions == nil || githubCheckoutOptions.SecurityOptions.Type() == SecurityTypeSsh {
+	if githubCheckoutOptions.SecurityOptions == nil {
+		return getGitReadOnlyUrl(
+			"git",
+			"github.com",
+			joinStrings("/", githubCheckoutOptions.User, "/", githubCheckoutOptions.Repository, ".git"),
+		), nil
+	}
+	if githubCheckoutOptions.SecurityOptions.Type() == SecurityTypeSsh {
 		return getSshUrl(
 			"",
 			"git",
@@ -310,6 +324,11 @@ func getBitbucketUrl(bitbucketCheckoutOptions *BitbucketCheckoutOptions) (string
 			bitbucketCheckoutOptions.SecurityOptions.Type().string(),
 		),
 	)
+}
+
+// TODO(pedge): user?
+func getGitReadOnlyUrl(user string, host string, path string) string {
+	return joinStrings("git://", host, path)
 }
 
 func getSshUrl(base string, user string, host string, path string) string {
