@@ -38,7 +38,7 @@ func (this *client) CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader,
 	case CheckoutTypeBitbucket:
 		return this.checkoutBitbucketTarball(checkoutOptions.(*BitbucketCheckoutOptions))
 	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutOptions.Type().string()))
+		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String()))
 	}
 }
 
@@ -141,7 +141,7 @@ func (this *client) checkoutBitbucketTarball(bitbucketCheckoutOptions *Bitbucket
 	case BitbucketTypeHg:
 		return this.checkoutHg(sshCommand, url, bitbucketCheckoutOptions.ChangesetId)
 	default:
-		return nil, newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.string()))
+		return nil, newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String()))
 	}
 }
 
@@ -243,8 +243,8 @@ func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
 	}
 	return "", newInternalError(
 		newValidationErrorSecurityNotImplementedForCheckoutType(
-			gitCheckoutOptions.Type().string(),
-			gitCheckoutOptions.SecurityOptions.Type().string(),
+			gitCheckoutOptions.Type().String(),
+			gitCheckoutOptions.SecurityOptions.Type().String(),
 		),
 	)
 }
@@ -274,8 +274,8 @@ func getGithubUrl(githubCheckoutOptions *GithubCheckoutOptions) (string, error) 
 	}
 	return "", newInternalError(
 		newValidationErrorSecurityNotImplementedForCheckoutType(
-			githubCheckoutOptions.Type().string(),
-			githubCheckoutOptions.SecurityOptions.Type().string(),
+			githubCheckoutOptions.Type().String(),
+			githubCheckoutOptions.SecurityOptions.Type().String(),
 		),
 	)
 }
@@ -291,8 +291,8 @@ func getHgUrl(hgCheckoutOptions *HgCheckoutOptions) (string, error) {
 	}
 	return "", newInternalError(
 		newValidationErrorSecurityNotImplementedForCheckoutType(
-			hgCheckoutOptions.Type().string(),
-			hgCheckoutOptions.SecurityOptions.Type().string(),
+			hgCheckoutOptions.Type().String(),
+			hgCheckoutOptions.SecurityOptions.Type().String(),
 		),
 	)
 }
@@ -315,13 +315,13 @@ func getBitbucketUrl(bitbucketCheckoutOptions *BitbucketCheckoutOptions) (string
 				joinStrings("/", bitbucketCheckoutOptions.User, "/", bitbucketCheckoutOptions.Repository),
 			), nil
 		default:
-			return "", newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.Type().string()))
+			return "", newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.Type().String()))
 		}
 	}
 	return "", newInternalError(
 		newValidationErrorSecurityNotImplementedForCheckoutType(
-			bitbucketCheckoutOptions.Type().string(),
-			bitbucketCheckoutOptions.SecurityOptions.Type().string(),
+			bitbucketCheckoutOptions.Type().String(),
+			bitbucketCheckoutOptions.SecurityOptions.Type().String(),
 		),
 	)
 }

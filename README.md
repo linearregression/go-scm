@@ -69,6 +69,12 @@ var (
 )
 ```
 
+#### func (BitbucketType) String
+
+```go
+func (this BitbucketType) String() string
+```
+
 #### type CheckoutOptions
 
 ```go
@@ -98,6 +104,12 @@ var (
 	CheckoutTypeHg        CheckoutType = 2
 	CheckoutTypeBitbucket CheckoutType = 3
 )
+```
+
+#### func (CheckoutType) String
+
+```go
+func (this CheckoutType) String() string
 ```
 
 #### type Client
@@ -248,6 +260,12 @@ var (
 	SecurityTypeSsh         SecurityType = 0
 	SecurityTypeAccessToken SecurityType = 1
 )
+```
+
+#### func (SecurityType) String
+
+```go
+func (this SecurityType) String() string
 ```
 
 #### type SshSecurityOptions

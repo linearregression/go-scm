@@ -35,7 +35,7 @@ func bitbucketTypeOf(s string) (BitbucketType, error) {
 	return bitbucketType, nil
 }
 
-func (this BitbucketType) string() string {
+func (this BitbucketType) String() string {
 	if int(this) < lenBitbucketTypeToString {
 		return bitbucketTypeToString[this]
 	}

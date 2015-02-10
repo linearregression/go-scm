@@ -35,7 +35,7 @@ func securityTypeOf(s string) (SecurityType, error) {
 	return SecurityType, nil
 }
 
-func (this SecurityType) string() string {
+func (this SecurityType) String() string {
 	if int(this) < lenSecurityTypeToString {
 		return securityTypeToString[this]
 	}

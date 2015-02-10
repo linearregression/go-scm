@@ -41,7 +41,7 @@ func checkoutTypeOf(s string) (CheckoutType, error) {
 	return checkoutType, nil
 }
 
-func (this CheckoutType) string() string {
+func (this CheckoutType) String() string {
 	if int(this) < lenCheckoutTypeToString {
 		return checkoutTypeToString[this]
 	}

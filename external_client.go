@@ -44,7 +44,7 @@ func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
 			}
 		default:
-			return nil, newInternalError(newValidationErrorUnknownSecurityType(securityType.string()))
+			return nil, newInternalError(newValidationErrorUnknownSecurityType(securityType.String()))
 		}
 	}
 	if !validCheckoutType(externalCheckoutOptions.Type) {
@@ -98,6 +98,6 @@ func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			SecurityOptions: securityOptions,
 		}, nil
 	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutType.string()))
+		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutType.String()))
 	}
 }
