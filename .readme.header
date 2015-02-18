@@ -15,3 +15,12 @@ import (
 )
 ```
 
+## Notes
+
+To run with Docker:
+
+```bash
+make container
+cat cmd/go-scm/_testdata/external_checkout_options.json | docker run -i pedge/goscm
+```
+

@@ -15,6 +15,15 @@ import (
 )
 ```
 
+## Notes
+
+To run with Docker:
+
+```bash
+make container
+cat cmd/go-scm/_testdata/external_checkout_options.json | docker run -i pedge/goscm
+```
+
 Git SSH requires Git 2.3.0.
 
 ## Usage
@@ -116,7 +125,7 @@ func (this CheckoutType) String() string
 
 ```go
 type Client interface {
-	CheckoutTarball(CheckoutOptions) (io.Reader, error)
+	CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader, error)
 }
 ```
 
@@ -135,6 +144,21 @@ type ClientOptions struct {
 }
 ```
 
+
+#### type DirectClient
+
+```go
+type DirectClient interface {
+	Checkout(checkoutOptions CheckoutOptions, executor exec.Executor, path string) error
+}
+```
+
+
+#### func  NewDirectClient
+
+```go
+func NewDirectClient(execClientProvider exec.ClientProvider) DirectClient
+```
 
 #### type ExternalCheckoutOptions
 
@@ -158,7 +182,7 @@ type ExternalCheckoutOptions struct {
 
 ```go
 type ExternalClient interface {
-	CheckoutTarball(*ExternalCheckoutOptions) (io.Reader, error)
+	CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error)
 }
 ```
 
@@ -167,6 +191,21 @@ type ExternalClient interface {
 
 ```go
 func NewExternalClient(client Client) ExternalClient
+```
+
+#### type ExternalDirectClient
+
+```go
+type ExternalDirectClient interface {
+	Checkout(externalCheckoutOptions *ExternalCheckoutOptions, executor exec.Executor, path string) error
+}
+```
+
+
+#### func  NewExternalDirectClient
+
+```go
+func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient
 ```
 
 #### type ExternalSecurityOptions
