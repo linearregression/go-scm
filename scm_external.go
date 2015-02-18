@@ -1,6 +1,10 @@
 package scm
 
-import "io"
+import (
+	"io"
+
+	"github.com/peter-edge/go-exec"
+)
 
 type ExternalCheckoutOptions struct {
 	Type            string                   `json:"type,omitempty" yaml:"type,omitempty"`
@@ -23,9 +27,17 @@ type ExternalSecurityOptions struct {
 }
 
 type ExternalClient interface {
-	CheckoutTarball(*ExternalCheckoutOptions) (io.Reader, error)
+	CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error)
 }
 
 func NewExternalClient(client Client) ExternalClient {
 	return newExternalClient(client)
+}
+
+type ExternalDirectClient interface {
+	Checkout(externalCheckoutOptions *ExternalCheckoutOptions, executor exec.Executor, path string) error
+}
+
+func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient {
+	return newExternalDirectClient(directClient)
 }

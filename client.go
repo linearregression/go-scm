@@ -15,6 +15,19 @@ const (
 	clonePath = "clone"
 )
 
+var (
+	ignoreGitCheckoutFilePatterns = []string{
+		".git",
+		".gitignore",
+	}
+	ignoreHgCheckoutFilePatterns = []string{
+		".hg",
+		".hgignore",
+		".hgsigs",
+		".hgtags",
+	}
+)
+
 func newClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) *client {
 	return &client{execClientProvider, clientOptions}
 }
@@ -25,31 +38,42 @@ type client struct {
 }
 
 func (this *client) CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader, error) {
-	if err := validateCheckoutOptions(checkoutOptions); err != nil {
+	executorReadFileManager, err := this.NewTempDirExecutorReadFileManager()
+	if err != nil {
 		return nil, err
+	}
+	if err := this.Checkout(checkoutOptions, executorReadFileManager, clonePath); err != nil {
+		return nil, err
+	}
+	return this.tarAndDestroy(executorReadFileManager, checkoutOptions, clonePath)
+}
+
+func (this *client) Checkout(checkoutOptions CheckoutOptions, executor exec.Executor, path string) error {
+	if err := validateCheckoutOptions(checkoutOptions); err != nil {
+		return err
 	}
 	switch checkoutOptions.Type() {
 	case CheckoutTypeGit:
-		return this.checkoutGitTarball(checkoutOptions.(*GitCheckoutOptions))
+		return this.checkoutGit(checkoutOptions.(*GitCheckoutOptions), executor, path)
 	case CheckoutTypeGithub:
-		return this.checkoutGithubTarball(checkoutOptions.(*GithubCheckoutOptions))
+		return this.checkoutGithub(checkoutOptions.(*GithubCheckoutOptions), executor, path)
 	case CheckoutTypeHg:
-		return this.checkoutHgTarball(checkoutOptions.(*HgCheckoutOptions))
+		return this.checkoutHg(checkoutOptions.(*HgCheckoutOptions), executor, path)
 	case CheckoutTypeBitbucket:
-		return this.checkoutBitbucketTarball(checkoutOptions.(*BitbucketCheckoutOptions))
+		return this.checkoutBitbucket(checkoutOptions.(*BitbucketCheckoutOptions), executor, path)
 	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String()))
+		return newInternalError(newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String()))
 	}
 }
 
-func (this *client) checkoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (reader io.Reader, retErr error) {
+func (this *client) checkoutGit(gitCheckoutOptions *GitCheckoutOptions, executor exec.Executor, path string) (retErr error) {
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
 	if gitCheckoutOptions.SecurityOptions != nil {
 		sshCommand, client, err = this.getSshCommand(gitCheckoutOptions.SecurityOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if client != nil {
 			defer func() {
@@ -61,19 +85,19 @@ func (this *client) checkoutGitTarball(gitCheckoutOptions *GitCheckoutOptions) (
 	}
 	url, err := getGitUrl(gitCheckoutOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return this.checkoutGit(sshCommand, url, gitCheckoutOptions.Branch, gitCheckoutOptions.CommitId)
+	return checkoutGitWithExecutor(executor, sshCommand, url, gitCheckoutOptions.Branch, gitCheckoutOptions.CommitId, path)
 }
 
-func (this *client) checkoutGithubTarball(githubCheckoutOptions *GithubCheckoutOptions) (reader io.Reader, retErr error) {
+func (this *client) checkoutGithub(githubCheckoutOptions *GithubCheckoutOptions, executor exec.Executor, path string) (retErr error) {
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
 	if githubCheckoutOptions.SecurityOptions != nil {
 		sshCommand, client, err = this.getSshCommand(githubCheckoutOptions.SecurityOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if client != nil {
 			defer func() {
@@ -85,19 +109,19 @@ func (this *client) checkoutGithubTarball(githubCheckoutOptions *GithubCheckoutO
 	}
 	url, err := getGithubUrl(githubCheckoutOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return this.checkoutGit(sshCommand, url, githubCheckoutOptions.Branch, githubCheckoutOptions.CommitId)
+	return checkoutGitWithExecutor(executor, sshCommand, url, githubCheckoutOptions.Branch, githubCheckoutOptions.CommitId, path)
 }
 
-func (this *client) checkoutHgTarball(hgCheckoutOptions *HgCheckoutOptions) (reader io.Reader, retErr error) {
+func (this *client) checkoutHg(hgCheckoutOptions *HgCheckoutOptions, executor exec.Executor, path string) (retErr error) {
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
 	if hgCheckoutOptions.SecurityOptions != nil {
 		sshCommand, client, err = this.getSshCommand(hgCheckoutOptions.SecurityOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if client != nil {
 			defer func() {
@@ -109,19 +133,19 @@ func (this *client) checkoutHgTarball(hgCheckoutOptions *HgCheckoutOptions) (rea
 	}
 	url, err := getHgUrl(hgCheckoutOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return this.checkoutHg(sshCommand, url, hgCheckoutOptions.ChangesetId)
+	return checkoutHgWithExecutor(executor, sshCommand, url, hgCheckoutOptions.ChangesetId, path)
 }
 
-func (this *client) checkoutBitbucketTarball(bitbucketCheckoutOptions *BitbucketCheckoutOptions) (reader io.Reader, retErr error) {
+func (this *client) checkoutBitbucket(bitbucketCheckoutOptions *BitbucketCheckoutOptions, executor exec.Executor, path string) (retErr error) {
 	var sshCommand string = ""
 	var client exec.Client
 	var err error
 	if bitbucketCheckoutOptions.SecurityOptions != nil {
 		sshCommand, client, err = this.getSshCommand(bitbucketCheckoutOptions.SecurityOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if client != nil {
 			defer func() {
@@ -133,46 +157,26 @@ func (this *client) checkoutBitbucketTarball(bitbucketCheckoutOptions *Bitbucket
 	}
 	url, err := getBitbucketUrl(bitbucketCheckoutOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	switch bitbucketCheckoutOptions.BitbucketType {
 	case BitbucketTypeGit:
-		return this.checkoutGit(sshCommand, url, bitbucketCheckoutOptions.Branch, bitbucketCheckoutOptions.CommitId)
+		return checkoutGitWithExecutor(executor, sshCommand, url, bitbucketCheckoutOptions.Branch, bitbucketCheckoutOptions.CommitId, path)
 	case BitbucketTypeHg:
-		return this.checkoutHg(sshCommand, url, bitbucketCheckoutOptions.ChangesetId)
+		return checkoutHgWithExecutor(executor, sshCommand, url, bitbucketCheckoutOptions.ChangesetId, path)
 	default:
-		return nil, newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String()))
+		return newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String()))
 	}
 }
 
-func (this *client) checkoutGit(gitSshCommand string, url string, branch string, commitId string) (io.Reader, error) {
-	client, err := this.NewTempDirExecutorReadFileManager()
-	if err != nil {
-		return nil, err
-	}
-	err = checkoutGitWithExecutor(client, gitSshCommand, url, branch, commitId, clonePath)
-	if err != nil {
-		return nil, err
-	}
-	return this.tarAndDestroy(client, ignoreGitCheckoutFilePatterns(), clonePath)
-}
-
-func (this *client) checkoutHg(sshCommand string, url string, changesetId string) (io.Reader, error) {
-	client, err := this.NewTempDirExecutorReadFileManager()
-	if err != nil {
-		return nil, err
-	}
-	err = checkoutHgWithExecutor(client, sshCommand, url, changesetId, clonePath)
-	if err != nil {
-		return nil, err
-	}
-	return this.tarAndDestroy(client, ignoreHgCheckoutFilePatterns(), clonePath)
-}
-
-func (this *client) tarAndDestroy(executorReadFileManager exec.ExecutorReadFileManager, ignoreCheckoutFilePatterns []string, path string) (io.Reader, error) {
+func (this *client) tarAndDestroy(executorReadFileManager exec.ExecutorReadFileManager, checkoutOptions CheckoutOptions, path string) (io.Reader, error) {
 	var reader io.Reader
 	var err error
 	if this.clientOptions.IgnoreCheckoutFiles {
+		ignoreCheckoutFilePatterns, err := this.ignoreCheckoutFilePatterns(checkoutOptions)
+		if err != nil {
+			return nil, err
+		}
 		reader, err = tarFiles(executorReadFileManager, ignoreCheckoutFilePatterns, path)
 	} else {
 		reader, err = tarFiles(executorReadFileManager, nil, path)
@@ -184,6 +188,29 @@ func (this *client) tarAndDestroy(executorReadFileManager exec.ExecutorReadFileM
 		return nil, err
 	}
 	return reader, nil
+}
+
+func (this *client) ignoreCheckoutFilePatterns(checkoutOptions CheckoutOptions) ([]string, error) {
+	switch checkoutOptions.Type() {
+	case CheckoutTypeGit:
+		return ignoreGitCheckoutFilePatterns, nil
+	case CheckoutTypeGithub:
+		return ignoreGitCheckoutFilePatterns, nil
+	case CheckoutTypeHg:
+		return ignoreHgCheckoutFilePatterns, nil
+	case CheckoutTypeBitbucket:
+		bitbucketCheckoutOptions := checkoutOptions.(*BitbucketCheckoutOptions)
+		switch bitbucketCheckoutOptions.BitbucketType {
+		case BitbucketTypeGit:
+			return ignoreGitCheckoutFilePatterns, nil
+		case BitbucketTypeHg:
+			return ignoreHgCheckoutFilePatterns, nil
+		default:
+			return nil, newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.Type().String()))
+		}
+	default:
+		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String()))
+	}
 }
 
 func (this *client) getSshCommand(securityOptions SecurityOptions) (string, exec.Client, error) {
@@ -374,13 +401,6 @@ func checkoutGitWithExecutor(
 	return nil
 }
 
-func ignoreGitCheckoutFilePatterns() []string {
-	return []string{
-		".git",
-		".gitignore",
-	}
-}
-
 func checkoutHgWithExecutor(
 	executor exec.Executor,
 	sshCommand string,
@@ -413,15 +433,6 @@ func checkoutHgWithExecutor(
 		return fmt.Errorf("CouldNotUpdate: %v %v", err.Error(), updateStderr.String())
 	}
 	return nil
-}
-
-func ignoreHgCheckoutFilePatterns() []string {
-	return []string{
-		".hg",
-		".hgignore",
-		".hgsigs",
-		".hgtags",
-	}
 }
 
 func tarFiles(readFileManager exec.ReadFileManager, ignoreCheckoutFilePatterns []string, path string) (io.Reader, error) {

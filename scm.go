@@ -66,9 +66,17 @@ type ClientOptions struct {
 }
 
 type Client interface {
-	CheckoutTarball(CheckoutOptions) (io.Reader, error)
+	CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader, error)
 }
 
 func NewClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) Client {
 	return newClient(execClientProvider, clientOptions)
+}
+
+type DirectClient interface {
+	Checkout(checkoutOptions CheckoutOptions, executor exec.Executor, path string) error
+}
+
+func NewDirectClient(execClientProvider exec.ClientProvider) DirectClient {
+	return newClient(execClientProvider, &ClientOptions{IgnoreCheckoutFiles: false})
 }
