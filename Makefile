@@ -1,22 +1,39 @@
-.PHONY: all deps build test cov install doc clean
+.PHONY: all deps updatedepst testdeps updatetestdeps build test cov install compile container doc clean
 
 all: test install
 
 deps:
+	go get -d -v ./...
+
+updatedeps:
+	go get -d -v -u -f ./...
+
+testdeps: deps
 	go get -d -v -t ./...
+
+updatetestdeps: updatedeps
+	go get -d -v -t -u -f ./...
 
 build: deps
 	go build ./...
 
-test: deps
+test: testdeps
 	go test -test.v ./...
 
-cov: deps
+cov: testdeps
 	go get -v github.com/axw/gocov/gocov
 	gocov test | gocov report
 
 install: deps
 	go install ./...
+
+compile: deps
+	mkdir -p tmp
+	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o tmp/go-scm cmd/go-scm/main.go
+	ls -lh tmp
+
+container: compile
+	docker build -t pedge/goscm .
 
 doc:
 	go get -v github.com/robertkrimen/godocdown/godocdown
@@ -25,3 +42,4 @@ doc:
 
 clean:
 	go clean -i ./...
+	docker rmi pedge/goscm || true
