@@ -33,7 +33,7 @@ func main() {
 
 	execClientProvider, err := exec.NewClientProvider(
 		&exec.OsExecOptions{
-			TmpDir: "",
+			TmpDir: baseDirPath,
 		},
 	)
 	checkError(err)
@@ -61,13 +61,7 @@ func main() {
 		executor, err := execClientProvider.NewTempDirExecutorReadFileManager()
 		checkError(err)
 		checkError(externalDirectClient.Checkout(&externalCheckoutOptions, executor, clonePath))
-		if baseDirPath != "" {
-			checkError(os.Rename(filepath.Join(executor.DirPath(), clonePath), filepath.Join(baseDirPath, clonePath)))
-			checkError(executor.Destroy())
-			fmt.Printf("Checked out to %s/%s\n", baseDirPath, clonePath)
-		} else {
-			fmt.Printf("Checked out to %s/%s\n", executor.DirPath(), clonePath)
-		}
+		fmt.Printf("Checked out to %s/%s\n", executor.DirPath(), clonePath)
 	}
 	os.Exit(0)
 }
