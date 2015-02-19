@@ -24,3 +24,8 @@ make container
 cat cmd/go-scm/_testdata/external_checkout_options.json | docker run -i pedge/goscm
 ```
 
+To run with Docker using etcd:
+
+```bash
+docker run pedge/goscm --etcd_url=http://host:post/ --etcd_input_key=key_for_json_external_checkout_options --etcd_output_key=key_for_path_within_docker_volume_of_result
+```

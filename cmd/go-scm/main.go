@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/coreos/go-etcd/etcd"
+	"github.com/peter-edge/go-etcdmarshal"
 	"github.com/peter-edge/go-exec"
 	"github.com/peter-edge/go-scm"
 )
@@ -18,18 +20,37 @@ func main() {
 	var clonePath string
 	var tarballName string
 	var ignoreCheckoutFiles bool
+	var etcdUrl string
+	var etcdInputKey string
+	var etcdOutputKey string
 	flag.StringVar(&baseDirPath, "base_dir_path", "", "The directory to clone into (defaults to a temporary directory)")
 	flag.StringVar(&clonePath, "clone_path", "", "The name of the clone directory (defaults to clone)")
 	flag.StringVar(&tarballName, "tarball_name", "", "The name of the tarball to output (no tarball by default)")
 	flag.BoolVar(&ignoreCheckoutFiles, "ignore_checkout_files", false, "Ignore checkout files if tarballing (false by default)")
+	flag.StringVar(&etcdUrl, "etcd_url", "", "The etcd url")
+	flag.StringVar(&etcdInputKey, "etcd_input_key", "", "The etcd input key")
+	flag.StringVar(&etcdOutputKey, "etcd_output_key", "", "The etcd output key")
 	flag.Parse()
 	checkTrue(!(clonePath != "" && tarballName != ""), "Cannot have both --clone_path and --tarball_name set")
 	checkTrue(!(tarballName == "" && ignoreCheckoutFiles), "Cannot set --ignoreCheckoutFiles if --tarball_name is not set")
+	checkTrue((etcdUrl == "") == (etcdInputKey == "") && (etcdInputKey == "") && (etcdOutputKey == ""), "All of --etcd_url, --etcd_input_key, --etcd_output_key must be set or not set")
 
-	data, err := ioutil.ReadAll(os.Stdin)
-	checkError(err)
 	var externalCheckoutOptions scm.ExternalCheckoutOptions
-	checkError(json.Unmarshal(data, &externalCheckoutOptions))
+	var etcdmarshalApi etcdmarshal.Api
+	if etcdUrl == "" {
+		data, err := ioutil.ReadAll(os.Stdin)
+		checkError(err)
+		checkError(json.Unmarshal(data, &externalCheckoutOptions))
+	} else {
+		etcdmarshalApi = etcdmarshal.NewJsonApi(
+			etcd.NewClient(
+				[]string{
+					etcdUrl,
+				},
+			),
+		)
+		checkError(etcdmarshalApi.Read(etcdInputKey, &externalCheckoutOptions))
+	}
 
 	execClientProvider, err := exec.NewClientProvider(
 		&exec.OsExecOptions{
@@ -38,6 +59,7 @@ func main() {
 	)
 	checkError(err)
 
+	var path string
 	if tarballName != "" {
 		client := scm.NewClient(execClientProvider, &scm.ClientOptions{IgnoreCheckoutFiles: ignoreCheckoutFiles})
 		externalClient := scm.NewExternalClient(client)
@@ -46,12 +68,12 @@ func main() {
 		if dirPath == "" {
 			dirPath = os.TempDir()
 		}
-		file, err := os.Create(filepath.Join(dirPath, tarballName))
+		path = filepath.Join(dirPath, tarballName)
+		file, err := os.Create(path)
 		checkError(err)
 		_, err = io.Copy(file, tarballReader)
 		checkError(err)
 		checkError(file.Close())
-		fmt.Printf("Created tarball as %s/%s\n", dirPath, tarballName)
 	} else {
 		if clonePath == "" {
 			clonePath = "clone"
@@ -60,22 +82,28 @@ func main() {
 		externalDirectClient := scm.NewExternalDirectClient(directClient)
 		executor, err := execClientProvider.NewTempDirExecutorReadFileManager()
 		checkError(err)
+		path = filepath.Join(executor.DirPath(), clonePath)
 		checkError(externalDirectClient.Checkout(&externalCheckoutOptions, executor, clonePath))
-		fmt.Printf("Checked out to %s/%s\n", executor.DirPath(), clonePath)
+	}
+
+	if etcdUrl == "" {
+		fmt.Println(path)
+	} else {
+		checkError(etcdmarshalApi.Write(etcdOutputKey, path))
 	}
 	os.Exit(0)
 }
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		os.Exit(1)
 	}
 }
 
 func checkTrue(value bool, message string) {
 	if !value {
-		fmt.Println(message)
+		fmt.Fprintf(os.Stderr, "%s\n", message)
 		os.Exit(1)
 	}
 }
