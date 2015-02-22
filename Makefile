@@ -29,7 +29,7 @@ install: deps
 
 compile: deps
 	mkdir -p tmp
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o tmp/go-scm cmd/go-scm/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags '-s' -o tmp/go-scm cmd/go-scm/main.go
 	ls -lh tmp
 
 container: compile

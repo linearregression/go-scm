@@ -33,16 +33,15 @@ func main() {
 	flag.Parse()
 	checkTrue(!(clonePath != "" && tarballName != ""), "Cannot have both --clone_path and --tarball_name set")
 	checkTrue(!(tarballName == "" && ignoreCheckoutFiles), "Cannot set --ignoreCheckoutFiles if --tarball_name is not set")
-	checkTrue((etcdUrl == "") == (etcdInputKey == "") && (etcdInputKey == "") && (etcdOutputKey == ""), "All of --etcd_url, --etcd_input_key, --etcd_output_key must be set or not set")
+	checkTrue(((etcdUrl == "") == (etcdInputKey == "")) && ((etcdInputKey == "") == (etcdOutputKey == "")), "All of --etcd_url, --etcd_input_key, --etcd_output_key must be set or not set")
 
 	var externalCheckoutOptions scm.ExternalCheckoutOptions
-	var etcdmarshalApi etcdmarshal.Api
 	if etcdUrl == "" {
 		data, err := ioutil.ReadAll(os.Stdin)
 		checkError(err)
 		checkError(json.Unmarshal(data, &externalCheckoutOptions))
 	} else {
-		etcdmarshalApi = etcdmarshal.NewJsonApi(
+		etcdmarshalApi := etcdmarshal.NewJsonApi(
 			etcd.NewClient(
 				[]string{
 					etcdUrl,
@@ -89,6 +88,13 @@ func main() {
 	if etcdUrl == "" {
 		fmt.Println(path)
 	} else {
+		etcdmarshalApi := etcdmarshal.NewStringApi(
+			etcd.NewClient(
+				[]string{
+					etcdUrl,
+				},
+			),
+		)
 		checkError(etcdmarshalApi.Write(etcdOutputKey, path))
 	}
 	os.Exit(0)

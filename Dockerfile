@@ -7,8 +7,8 @@ RUN \
   apt-get update -y && \
   apt-get install -y git
 
-VOLUME ["/goscm_output"]
+VOLUME ["/goscm"]
 
 RUN mkdir -p /app
 ADD tmp/go-scm /app/
-ENTRYPOINT ["/app/go-scm", "--base_dir_path=/goscm_output"]
+ENTRYPOINT ["/app/go-scm", "--base_dir_path=/goscm"]
