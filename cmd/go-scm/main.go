@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/peter-edge/go-etcdmarshal"
@@ -17,6 +18,7 @@ import (
 
 func main() {
 	var baseDirPath string
+	var hostBaseDirPath string
 	var clonePath string
 	var tarballName string
 	var ignoreCheckoutFiles bool
@@ -24,6 +26,7 @@ func main() {
 	var etcdInputKey string
 	var etcdOutputKey string
 	flag.StringVar(&baseDirPath, "base_dir_path", "", "The directory to clone into (defaults to a temporary directory)")
+	flag.StringVar(&hostBaseDirPath, "host_base_dir_path", "", "The equivalent directory within the host if base_dir_path is a linked volume (base_dir_path must be set)")
 	flag.StringVar(&clonePath, "clone_path", "", "The name of the clone directory (defaults to clone)")
 	flag.StringVar(&tarballName, "tarball_name", "", "The name of the tarball to output (no tarball by default)")
 	flag.BoolVar(&ignoreCheckoutFiles, "ignore_checkout_files", false, "Ignore checkout files if tarballing (false by default)")
@@ -32,6 +35,9 @@ func main() {
 	flag.StringVar(&etcdOutputKey, "etcd_output_key", "", "The etcd output key")
 	flag.Parse()
 	checkTrue(!(clonePath != "" && tarballName != ""), "Cannot have both --clone_path and --tarball_name set")
+	if hostBaseDirPath != "" {
+		checkTrue(baseDirPath != "", "--base_dir_path must be set if --host_base_dir_path is set")
+	}
 	checkTrue(!(tarballName == "" && ignoreCheckoutFiles), "Cannot set --ignoreCheckoutFiles if --tarball_name is not set")
 	checkTrue(((etcdUrl == "") == (etcdInputKey == "")) && ((etcdInputKey == "") == (etcdOutputKey == "")), "All of --etcd_url, --etcd_input_key, --etcd_output_key must be set or not set")
 
@@ -85,6 +91,9 @@ func main() {
 		checkError(externalDirectClient.Checkout(&externalCheckoutOptions, executor, clonePath))
 	}
 
+	if hostBaseDirPath != "" {
+		path = strings.NewReplacer(baseDirPath, hostBaseDirPath).Replace(path)
+	}
 	if etcdUrl == "" {
 		fmt.Println(path)
 	} else {
