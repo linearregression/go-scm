@@ -24,8 +24,6 @@ make install
 cat cmd/go-scm/_testdata/external_checkout_options.json | go-scm
 ```
 
-Binaries are also available in [downloads](downloads).
-
 To run with Docker:
 
 ```bash
@@ -39,6 +37,7 @@ To run with Docker using etcd:
 make container
 docker run pedge/goscm --etcd_url=http://host:port --etcd_input_key=key_for_json_external_checkout_options --etcd_output_key=key_for_path_within_docker_volume_of_result
 ```
+
 Git SSH requires Git 2.3.0.
 
 ## Usage
