@@ -1,6 +1,27 @@
-.PHONY: all deps updatedepst testdeps updatetestdeps build test cov install compile container doc clean
+.PHONY: \
+	all \
+	precommit \
+	deps \
+	updatedeps \
+	testdeps \
+	updatetestdeps \
+	build \
+	install \
+	test \
+	cov \
+	libcontainer \
+	linuxcompile \
+	darwincompile \
+	xccompile \
+	container \
+	linuxdockercompile \
+	darwindockercompile \
+	xc \
+	clean
 
 all: test install
+
+precommit: xc
 
 deps:
 	go get -d -v ./...
@@ -17,29 +38,37 @@ updatetestdeps: updatedeps
 build: deps
 	go build ./...
 
-test: testdeps
-	go test -test.v ./...
+install: deps
+	go install ./...
 
 cov: testdeps
 	go get -v github.com/axw/gocov/gocov
 	gocov test | gocov report
 
-install: deps
-	go install ./...
+test: testdeps
+	go test -test.v ./...
 
-compile: deps
-	mkdir -p tmp
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags '-s' -o tmp/go-scm cmd/go-scm/main.go
-	ls -lh tmp
+libcontainer: testdeps
+	docker build --file=Dockerfile.lib -t pedge/goscmlib .
 
-container: compile
-	docker build -t pedge/goscm .
+linuxcompile: deps
+	bash makebin/compile.sh linux
 
-doc:
-	go get -v github.com/robertkrimen/godocdown/godocdown
-	cp .readme.header README.md
-	godocdown | tail -n +7 >> README.md
+darwincompile: deps
+	bash makebin/compile.sh darwin
+
+xccompile: linuxcompile darwincompile
+
+container: linuxcompile
+	docker build --file=Dockerfile.goscm -t pedge/goscm .
+
+linuxdockercompile: libcontainer
+	bash makebin/docker_compile.sh linux
+
+darwindockercompile: libcontainer
+	bash makebin/docker_compile.sh darwin
+
+xc: linuxdockercompile darwindockercompile
 
 clean:
 	go clean -i ./...
-	docker rmi pedge/goscm || true
