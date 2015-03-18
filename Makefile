@@ -16,6 +16,7 @@
 	container \
 	linuxdockercompile \
 	darwindockercompile \
+	doc \
 	xc \
 	clean
 
@@ -67,6 +68,11 @@ linuxdockercompile: libcontainer
 
 darwindockercompile: libcontainer
 	bash makebin/docker_compile.sh darwin
+
+doc:
+	go get -v github.com/robertkrimen/godocdown/godocdown
+	cp .readme.header README.md
+	godocdown | tail -n +7 >> README.md
 
 xc: linuxdockercompile darwindockercompile
 
