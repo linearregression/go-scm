@@ -1,0 +1,13 @@
+golang:
+  image: golang:1.4.2-cross
+goscm:
+  build:
+    image: pedge/goscm
+    dockerfile_path: Dockerfile.goscm
+    configure:
+      service: golang
+      command: make linuxcompile
+lib:
+  build:
+    image: pedge/goscmlib
+    dockerfile_path: Dockerfile.lib
