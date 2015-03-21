@@ -62,6 +62,9 @@ func main() {
 	if dirPath == "" {
 		dirPath, err = osutils.NewTempDir()
 		checkError(err)
+	} else {
+		dirPath, err = osutils.NewSubDir(dirPath)
+		checkError(err)
 	}
 	var path string
 	if tarballName != "" {
