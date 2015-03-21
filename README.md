@@ -42,6 +42,81 @@ Git SSH requires Git 2.3.0.
 
 ## Usage
 
+```go
+var (
+	IgnoreGitCheckoutFilePatterns = []string{
+		".git",
+		".gitignore",
+	}
+	IgnoreHgCheckoutFilePatterns = []string{
+		".hg",
+		".hgignore",
+		".hgsigs",
+		".hgtags",
+	}
+)
+```
+
+#### func  Checkout
+
+```go
+func Checkout(absolutePath string, checkoutOptions CheckoutOptions, options *Options) error
+```
+
+#### func  CheckoutTarball
+
+```go
+func CheckoutTarball(checkoutOptions CheckoutOptions, options *Options) (io.Reader, error)
+```
+
+#### func  ExternalCheckout
+
+```go
+func ExternalCheckout(absolutePath string, externalCheckoutOptions *ExternalCheckoutOptions, options *Options) error
+```
+
+#### func  ExternalCheckoutTarball
+
+```go
+func ExternalCheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions, options *Options) (io.Reader, error)
+```
+
+#### func  UnknownBitbucketType
+
+```go
+func UnknownBitbucketType(unknownBitbucketType interface{}) error
+```
+
+#### func  UnknownCheckoutType
+
+```go
+func UnknownCheckoutType(unknownCheckoutType interface{}) error
+```
+
+#### func  UnknownSecurityType
+
+```go
+func UnknownSecurityType(unknownSecurityType interface{}) error
+```
+
+#### func  ValidBitbucketType
+
+```go
+func ValidBitbucketType(s string) bool
+```
+
+#### func  ValidCheckoutType
+
+```go
+func ValidCheckoutType(s string) bool
+```
+
+#### func  ValidSecurityType
+
+```go
+func ValidSecurityType(s string) bool
+```
+
 #### type AccessTokenSecurityOptions
 
 ```go
@@ -92,6 +167,12 @@ var (
 )
 ```
 
+#### func  BitbucketTypeOf
+
+```go
+func BitbucketTypeOf(s string) (BitbucketType, error)
+```
+
 #### func (BitbucketType) String
 
 ```go
@@ -106,12 +187,6 @@ type CheckoutOptions interface {
 }
 ```
 
-
-#### func  ConvertExternalCheckoutOptions
-
-```go
-func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error)
-```
 
 #### type CheckoutType
 
@@ -129,49 +204,16 @@ var (
 )
 ```
 
+#### func  CheckoutTypeOf
+
+```go
+func CheckoutTypeOf(s string) (CheckoutType, error)
+```
+
 #### func (CheckoutType) String
 
 ```go
 func (this CheckoutType) String() string
-```
-
-#### type Client
-
-```go
-type Client interface {
-	CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader, error)
-}
-```
-
-
-#### func  NewClient
-
-```go
-func NewClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) Client
-```
-
-#### type ClientOptions
-
-```go
-type ClientOptions struct {
-	IgnoreCheckoutFiles bool
-}
-```
-
-
-#### type DirectClient
-
-```go
-type DirectClient interface {
-	Checkout(checkoutOptions CheckoutOptions, executor exec.Executor, path string) error
-}
-```
-
-
-#### func  NewDirectClient
-
-```go
-func NewDirectClient(execClientProvider exec.ClientProvider) DirectClient
 ```
 
 #### type ExternalCheckoutOptions
@@ -191,36 +233,6 @@ type ExternalCheckoutOptions struct {
 }
 ```
 
-
-#### type ExternalClient
-
-```go
-type ExternalClient interface {
-	CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error)
-}
-```
-
-
-#### func  NewExternalClient
-
-```go
-func NewExternalClient(client Client) ExternalClient
-```
-
-#### type ExternalDirectClient
-
-```go
-type ExternalDirectClient interface {
-	Checkout(externalCheckoutOptions *ExternalCheckoutOptions, executor exec.Executor, path string) error
-}
-```
-
-
-#### func  NewExternalDirectClient
-
-```go
-func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient
-```
 
 #### type ExternalSecurityOptions
 
@@ -292,6 +304,15 @@ type HgCheckoutOptions struct {
 func (this *HgCheckoutOptions) Type() CheckoutType
 ```
 
+#### type Options
+
+```go
+type Options struct {
+	IgnoreCheckoutFiles bool
+}
+```
+
+
 #### type SecurityOptions
 
 ```go
@@ -313,6 +334,12 @@ var (
 	SecurityTypeSsh         SecurityType = 0
 	SecurityTypeAccessToken SecurityType = 1
 )
+```
+
+#### func  SecurityTypeOf
+
+```go
+func SecurityTypeOf(s string) (SecurityType, error)
 ```
 
 #### func (SecurityType) String
@@ -362,5 +389,6 @@ var (
 	ValidationErrorTypeUnknownCheckoutType                   ValidationErrorType = "UnknownCheckoutType"
 	ValidationErrorTypeUnknownSecurityType                   ValidationErrorType = "UnknownSecurityType"
 	ValidationErrorTypeUnknownBitbucketType                  ValidationErrorType = "UnknownBitbucketType"
+	ValidationErrorTypeNotAbsolutePath                       ValidationErrorType = "NotAbsolutePath"
 )
 ```
