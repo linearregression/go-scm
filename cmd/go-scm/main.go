@@ -12,7 +12,7 @@ import (
 
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/peter-edge/go-etcdmarshal"
-	"github.com/peter-edge/go-exec"
+	"github.com/peter-edge/go-osutils"
 	"github.com/peter-edge/go-scm"
 )
 
@@ -57,22 +57,15 @@ func main() {
 		checkError(etcdmarshalApi.Read(etcdInputKey, &externalCheckoutOptions))
 	}
 
-	execClientProvider, err := exec.NewClientProvider(
-		&exec.OsExecOptions{
-			TmpDir: baseDirPath,
-		},
-	)
-	checkError(err)
-
+	dirPath := baseDirPath
+	var err error
+	if dirPath == "" {
+		dirPath, err = osutils.NewTempDir()
+		checkError(err)
+	}
 	var path string
 	if tarballName != "" {
-		client := scm.NewClient(execClientProvider, &scm.ClientOptions{IgnoreCheckoutFiles: ignoreCheckoutFiles})
-		externalClient := scm.NewExternalClient(client)
-		tarballReader, err := externalClient.CheckoutTarball(&externalCheckoutOptions)
-		dirPath := baseDirPath
-		if dirPath == "" {
-			dirPath = os.TempDir()
-		}
+		tarballReader, err := scm.ExternalCheckoutTarball(&externalCheckoutOptions, &scm.Options{IgnoreCheckoutFiles: ignoreCheckoutFiles})
 		path = filepath.Join(dirPath, tarballName)
 		file, err := os.Create(path)
 		checkError(err)
@@ -83,12 +76,8 @@ func main() {
 		if clonePath == "" {
 			clonePath = "clone"
 		}
-		directClient := scm.NewDirectClient(execClientProvider)
-		externalDirectClient := scm.NewExternalDirectClient(directClient)
-		executor, err := execClientProvider.NewTempDirExecutorReadFileManager()
-		checkError(err)
-		path = filepath.Join(executor.DirPath(), clonePath)
-		checkError(externalDirectClient.Checkout(&externalCheckoutOptions, executor, clonePath))
+		path = filepath.Join(dirPath, clonePath)
+		checkError(scm.ExternalCheckout(path, &externalCheckoutOptions, &scm.Options{IgnoreCheckoutFiles: ignoreCheckoutFiles}))
 	}
 
 	if hostBaseDirPath != "" {

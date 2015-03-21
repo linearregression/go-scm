@@ -1,9 +1,6 @@
 package scm
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 var (
 	CheckoutTypeGit       CheckoutType = 0
@@ -28,15 +25,15 @@ var (
 
 type CheckoutType uint
 
-func validCheckoutType(s string) bool {
+func ValidCheckoutType(s string) bool {
 	_, ok := stringToCheckoutType[s]
 	return ok
 }
 
-func checkoutTypeOf(s string) (CheckoutType, error) {
+func CheckoutTypeOf(s string) (CheckoutType, error) {
 	checkoutType, ok := stringToCheckoutType[s]
 	if !ok {
-		return 0, errors.New(unknownCheckoutType(s))
+		return 0, UnknownCheckoutType(s)
 	}
 	return checkoutType, nil
 }
@@ -45,9 +42,9 @@ func (this CheckoutType) String() string {
 	if int(this) < lenCheckoutTypeToString {
 		return checkoutTypeToString[this]
 	}
-	panic(unknownCheckoutType(this))
+	panic(UnknownCheckoutType(this).Error())
 }
 
-func unknownCheckoutType(unknownCheckoutType interface{}) string {
-	return fmt.Sprintf("scm: unknown CheckoutType: %v", unknownCheckoutType)
+func UnknownCheckoutType(unknownCheckoutType interface{}) error {
+	return fmt.Errorf("scm: unknown CheckoutType: %v", unknownCheckoutType)
 }
