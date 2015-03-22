@@ -529,11 +529,7 @@ func tarFiles(path string, ignoreCheckoutFilePatterns []string) (io.Reader, erro
 	if ignoreCheckoutFilePatterns != nil && len(ignoreCheckoutFilePatterns) > 0 {
 		filterFileList := make([]string, 0)
 		for _, file := range fileList {
-			rel, err := filepath.Rel(path, file)
-			if err != nil {
-				return nil, err
-			}
-			matches, err := fileMatches(rel, ignoreCheckoutFilePatterns)
+			matches, err := fileMatches(file, ignoreCheckoutFilePatterns)
 			if err != nil {
 				return nil, err
 			}
