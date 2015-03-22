@@ -1,6 +1,9 @@
 package scm
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	SecurityTypeSsh         SecurityType = 0
@@ -19,15 +22,15 @@ var (
 
 type SecurityType uint
 
-func ValidSecurityType(s string) bool {
+func validSecurityType(s string) bool {
 	_, ok := stringToSecurityType[s]
 	return ok
 }
 
-func SecurityTypeOf(s string) (SecurityType, error) {
+func securityTypeOf(s string) (SecurityType, error) {
 	SecurityType, ok := stringToSecurityType[s]
 	if !ok {
-		return 0, UnknownSecurityType(s)
+		return 0, errors.New(unknownSecurityType(s))
 	}
 	return SecurityType, nil
 }
@@ -36,9 +39,9 @@ func (this SecurityType) String() string {
 	if int(this) < lenSecurityTypeToString {
 		return securityTypeToString[this]
 	}
-	panic(UnknownSecurityType(this).Error())
+	panic(unknownSecurityType(this))
 }
 
-func UnknownSecurityType(unknownSecurityType interface{}) error {
-	return fmt.Errorf("scm: unknown SecurityType: %v", unknownSecurityType)
+func unknownSecurityType(unknownSecurityType interface{}) string {
+	return fmt.Sprintf("scm: unknown SecurityType: %v", unknownSecurityType)
 }

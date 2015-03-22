@@ -1,8 +1,9 @@
 package scm
 
 import (
-	"bytes"
 	"io"
+
+	"github.com/peter-edge/go-exec"
 )
 
 type ExternalCheckoutOptions struct {
@@ -25,101 +26,18 @@ type ExternalSecurityOptions struct {
 	AccessToken           string `json:"access_token,omitempty" yaml:"access_token,omitempty"`
 }
 
-func ExternalCheckout(absolutePath string, externalCheckoutOptions *ExternalCheckoutOptions, options *Options) error {
-	checkoutOptions, err := convertExternalCheckoutOptions(externalCheckoutOptions)
-	if err != nil {
-		return err
-	}
-	return Checkout(absolutePath, checkoutOptions, options)
+type ExternalClient interface {
+	CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error)
 }
 
-func ExternalCheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions, options *Options) (io.Reader, error) {
-	checkoutOptions, err := convertExternalCheckoutOptions(externalCheckoutOptions)
-	if err != nil {
-		return nil, err
-	}
-	return CheckoutTarball(checkoutOptions, options)
+func NewExternalClient(client Client) ExternalClient {
+	return newExternalClient(client)
 }
 
-// ***** PRIVATE *****
+type ExternalDirectClient interface {
+	Checkout(externalCheckoutOptions *ExternalCheckoutOptions, executor exec.Executor, path string) error
+}
 
-func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
-	var securityOptions SecurityOptions
-	if externalCheckoutOptions.SecurityOptions != nil {
-		if !ValidSecurityType(externalCheckoutOptions.SecurityOptions.Type) {
-			return nil, newValidationErrorUnknownSecurityType(externalCheckoutOptions.Type)
-		}
-		securityType, err := SecurityTypeOf(externalCheckoutOptions.SecurityOptions.Type)
-		if err != nil {
-			return nil, err
-		}
-		switch securityType {
-		case SecurityTypeSsh:
-			var privateKey bytes.Buffer
-			privateKey.WriteString(externalCheckoutOptions.SecurityOptions.PrivateKey)
-			securityOptions = &SshSecurityOptions{
-				StrictHostKeyChecking: externalCheckoutOptions.SecurityOptions.StrictHostKeyChecking,
-				PrivateKey:            &privateKey,
-			}
-		case SecurityTypeAccessToken:
-			securityOptions = &AccessTokenSecurityOptions{
-				AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
-			}
-		default:
-			return nil, UnknownSecurityType(securityType)
-		}
-	}
-	if !ValidCheckoutType(externalCheckoutOptions.Type) {
-		return nil, newValidationErrorUnknownCheckoutType(externalCheckoutOptions.Type)
-	}
-	checkoutType, err := CheckoutTypeOf(externalCheckoutOptions.Type)
-	if err != nil {
-		return nil, err
-	}
-	switch checkoutType {
-	case CheckoutTypeGit:
-		return &GitCheckoutOptions{
-			User:            externalCheckoutOptions.User,
-			Host:            externalCheckoutOptions.Host,
-			Path:            externalCheckoutOptions.Path,
-			Branch:          externalCheckoutOptions.Branch,
-			CommitId:        externalCheckoutOptions.CommitId,
-			SecurityOptions: securityOptions,
-		}, nil
-	case CheckoutTypeGithub:
-		return &GithubCheckoutOptions{
-			User:            externalCheckoutOptions.User,
-			Repository:      externalCheckoutOptions.Repository,
-			Branch:          externalCheckoutOptions.Branch,
-			CommitId:        externalCheckoutOptions.CommitId,
-			SecurityOptions: securityOptions,
-		}, nil
-	case CheckoutTypeHg:
-		return &HgCheckoutOptions{
-			User:            externalCheckoutOptions.User,
-			Host:            externalCheckoutOptions.Host,
-			Path:            externalCheckoutOptions.Path,
-			ChangesetId:     externalCheckoutOptions.ChangesetId,
-			SecurityOptions: securityOptions,
-		}, nil
-	case CheckoutTypeBitbucket:
-		if !ValidBitbucketType(externalCheckoutOptions.BitbucketType) {
-			return nil, newValidationErrorUnknownBitbucketType(externalCheckoutOptions.BitbucketType)
-		}
-		bitbucketType, err := BitbucketTypeOf(externalCheckoutOptions.BitbucketType)
-		if err != nil {
-			return nil, err
-		}
-		return &BitbucketCheckoutOptions{
-			BitbucketType:   bitbucketType,
-			User:            externalCheckoutOptions.User,
-			Repository:      externalCheckoutOptions.Repository,
-			Branch:          externalCheckoutOptions.Branch,
-			CommitId:        externalCheckoutOptions.CommitId,
-			ChangesetId:     externalCheckoutOptions.ChangesetId,
-			SecurityOptions: securityOptions,
-		}, nil
-	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutType.String()))
-	}
+func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient {
+	return newExternalDirectClient(directClient)
 }

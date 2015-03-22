@@ -13,7 +13,6 @@ var (
 	ValidationErrorTypeUnknownCheckoutType                   ValidationErrorType = "UnknownCheckoutType"
 	ValidationErrorTypeUnknownSecurityType                   ValidationErrorType = "UnknownSecurityType"
 	ValidationErrorTypeUnknownBitbucketType                  ValidationErrorType = "UnknownBitbucketType"
-	ValidationErrorTypeNotAbsolutePath                       ValidationErrorType = "NotAbsolutePath"
 )
 
 type ValidationErrorType string
@@ -64,10 +63,6 @@ func newValidationErrorUnknownSecurityType(securityType string) ValidationError 
 
 func newValidationErrorUnknownBitbucketType(bitbucketType string) ValidationError {
 	return newValidationError(ValidationErrorTypeUnknownBitbucketType, map[string]string{"bitbucketType": bitbucketType})
-}
-
-func newValidationErrorNotAbsolutePath(absolutePath string) ValidationError {
-	return newValidationError(ValidationErrorTypeNotAbsolutePath, map[string]string{"absolutePath": absolutePath})
 }
 
 func newInternalError(validationError ValidationError) error {
