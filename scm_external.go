@@ -41,3 +41,7 @@ type ExternalDirectClient interface {
 func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient {
 	return newExternalDirectClient(directClient)
 }
+
+func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
+	return convertExternalCheckoutOptions(externalCheckoutOptions)
+}

@@ -61,6 +61,27 @@ func (this *BitbucketCheckoutOptions) Type() CheckoutType {
 	return CheckoutTypeBitbucket
 }
 
+type SecurityOptions interface {
+	Type() SecurityType
+}
+
+type SshSecurityOptions struct {
+	StrictHostKeyChecking bool
+	PrivateKey            io.Reader
+}
+
+func (this *SshSecurityOptions) Type() SecurityType {
+	return SecurityTypeSsh
+}
+
+type AccessTokenSecurityOptions struct {
+	AccessToken string
+}
+
+func (this *AccessTokenSecurityOptions) Type() SecurityType {
+	return SecurityTypeAccessToken
+}
+
 type ClientOptions struct {
 	IgnoreCheckoutFiles bool
 }
