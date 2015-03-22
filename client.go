@@ -381,7 +381,7 @@ func checkoutGitWithExecutor(
 		Stderr: &cloneStderr,
 	}
 	if gitSshCommand != "" {
-		cmd.Env = []string{"GIT_SSH_COMMAND='" + gitSshCommand + "'"}
+		cmd.Env = []string{"GIT_SSH_COMMAND=" + gitSshCommand}
 	}
 	if err := executor.Execute(&cmd)(); err != nil {
 		// TODO(pedge)
