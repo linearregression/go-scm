@@ -7,7 +7,11 @@ goscm:
     configure:
       service: golang
       command: make linuxcompile
-lib:
+build:
   build:
-    image: pedge/goscmlib
-    dockerfile_path: Dockerfile.lib
+    image: pedge/goscmbuild
+    dockerfile_path: Dockerfile.build
+test:
+  build:
+    image: pedge/goscmtest
+    dockerfile_path: Dockerfile.test

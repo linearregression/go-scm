@@ -11,7 +11,8 @@
 	test \
 	codeshipsteps \
 	cov \
-	libcontainer \
+	testcontainer \
+	buildcontainer \
 	linuxcompile \
 	darwincompile \
 	xccompile \
@@ -59,8 +60,11 @@ cov: testdeps
 	go get -v github.com/axw/gocov/gocov
 	gocov test | gocov report
 
-libcontainer: testdeps
-	docker build --file=Dockerfile.lib -t pedge/goscmlib .
+buildcontainer: testdeps
+	docker build --file=Dockerfile.build -t pedge/goscmbuild .
+
+testcontainer: testdeps
+	docker build --file=Dockerfile.test -t pedge/goscmtest .
 
 linuxcompile: deps
 	bash makebin/compile.sh linux

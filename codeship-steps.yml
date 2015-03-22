@@ -1,2 +1,2 @@
-- service: lib
+- service: test
   command: make test

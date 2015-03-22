@@ -33,7 +33,7 @@ case "${1}" in
 esac
 
 rm -rf "${HOST_TMPDIR}/goscm_build/${GOOS}"
-docker run -v "${HOST_TMPDIR}:/tmp" pedge/goscmlib make "${GOOS}compile"
+docker run -v "${HOST_TMPDIR}:/tmp" pedge/goscmbuild make "${GOOS}compile"
 rm -rf "downloads/${GOOS}_amd64"
 mkdir -p "downloads/${GOOS}_amd64"
 cp "${HOST_TMPDIR}/goscm_build/${GOOS}/go-scm" "downloads/${GOOS}_amd64/go-scm"
