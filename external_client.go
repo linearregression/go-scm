@@ -42,10 +42,7 @@ func (this *externalDirectClient) Checkout(externalCheckoutOptions *ExternalChec
 func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
 	var securityOptions SecurityOptions
 	if externalCheckoutOptions.SecurityOptions != nil {
-		if !validSecurityType(externalCheckoutOptions.SecurityOptions.Type) {
-			return nil, newValidationErrorUnknownSecurityType(externalCheckoutOptions.Type)
-		}
-		securityType, err := securityTypeOf(externalCheckoutOptions.SecurityOptions.Type)
+		securityType, err := SecurityTypeOf(externalCheckoutOptions.SecurityOptions.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -62,13 +59,10 @@ func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
 			}
 		default:
-			return nil, newInternalError(newValidationErrorUnknownSecurityType(securityType.String()))
+			return nil, UnknownSecurityType(securityType)
 		}
 	}
-	if !validCheckoutType(externalCheckoutOptions.Type) {
-		return nil, newValidationErrorUnknownCheckoutType(externalCheckoutOptions.Type)
-	}
-	checkoutType, err := checkoutTypeOf(externalCheckoutOptions.Type)
+	checkoutType, err := CheckoutTypeOf(externalCheckoutOptions.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -99,10 +93,7 @@ func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			SecurityOptions: securityOptions,
 		}, nil
 	case CheckoutTypeBitbucket:
-		if !validBitbucketType(externalCheckoutOptions.BitbucketType) {
-			return nil, newValidationErrorUnknownBitbucketType(externalCheckoutOptions.BitbucketType)
-		}
-		bitbucketType, err := bitbucketTypeOf(externalCheckoutOptions.BitbucketType)
+		bitbucketType, err := BitbucketTypeOf(externalCheckoutOptions.BitbucketType)
 		if err != nil {
 			return nil, err
 		}
@@ -116,6 +107,6 @@ func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			SecurityOptions: securityOptions,
 		}, nil
 	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutType(checkoutType.String()))
+		return nil, UnknownCheckoutType(checkoutType)
 	}
 }

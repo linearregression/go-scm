@@ -1,9 +1,6 @@
 package scm
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 var (
 	BitbucketTypeGit BitbucketType = 0
@@ -22,15 +19,10 @@ var (
 
 type BitbucketType uint
 
-func validBitbucketType(s string) bool {
-	_, ok := stringToBitbucketType[s]
-	return ok
-}
-
-func bitbucketTypeOf(s string) (BitbucketType, error) {
+func BitbucketTypeOf(s string) (BitbucketType, error) {
 	bitbucketType, ok := stringToBitbucketType[s]
 	if !ok {
-		return 0, errors.New(unknownBitbucketType(s))
+		return 0, UnknownBitbucketType(s)
 	}
 	return bitbucketType, nil
 }
@@ -39,9 +31,9 @@ func (this BitbucketType) String() string {
 	if int(this) < lenBitbucketTypeToString {
 		return bitbucketTypeToString[this]
 	}
-	panic(unknownBitbucketType(this))
+	panic(UnknownBitbucketType(this).Error())
 }
 
-func unknownBitbucketType(unknownBitbucketType interface{}) string {
-	return fmt.Sprintf("scm: unknown BitbucketType: %v", unknownBitbucketType)
+func UnknownBitbucketType(unknownBitbucketType interface{}) error {
+	return fmt.Errorf("scm: unknown BitbucketType: %v", unknownBitbucketType)
 }
