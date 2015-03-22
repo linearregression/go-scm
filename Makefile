@@ -1,6 +1,7 @@
 .PHONY: \
 	all \
 	precommit \
+	check_for_codeship \
 	deps \
 	updatedeps \
 	testdeps \
@@ -8,6 +9,7 @@
 	build \
 	install \
 	test \
+	codeshipsteps \
 	cov \
 	libcontainer \
 	linuxcompile \
@@ -24,6 +26,10 @@ all: test install
 
 precommit: xc
 
+check_for_codeship:
+	@ if ! which codeship > /dev/null; then \
+			echo "error: codeship not installed" >&2; \
+	  fi
 deps:
 	go get -d -v ./...
 
@@ -42,12 +48,16 @@ build: deps
 install: deps
 	go install ./...
 
-cov: testdeps
-	go get -v github.com/axw/gocov/gocov
-	gocov test | gocov report
 
 test: testdeps
 	go test -test.v ./...
+
+codeshipsteps: check_for_codeship 
+	codeship steps
+
+cov: testdeps
+	go get -v github.com/axw/gocov/gocov
+	gocov test | gocov report
 
 libcontainer: testdeps
 	docker build --file=Dockerfile.lib -t pedge/goscmlib .
