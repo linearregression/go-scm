@@ -12,7 +12,6 @@ import (
 	tarexec "github.com/peter-edge/go-tar/exec"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -20,42 +19,19 @@ const (
 	testHgGitChangesetId      = "4538981d2c3f3fcb594ad7f2ae7622380929e226"
 )
 
-type Suite struct {
-	suite.Suite
-
-	clientProvider exec.ClientProvider
+func TestGit(t *testing.T) {
+	t.Parallel()
+	testGit(t, false)
 }
 
-func TestSuite(t *testing.T) {
-	suite.Run(t, new(Suite))
+func TestGitIgnore(t *testing.T) {
+	t.Parallel()
+	testGit(t, true)
 }
 
-func (this *Suite) SetupSuite() {
-}
-
-func (this *Suite) SetupTest() {
-	clientProvider, err := exec.NewClientProvider(&exec.OsExecOptions{})
-	require.NoError(this.T(), err)
-	this.clientProvider = clientProvider
-}
-
-func (this *Suite) TearDownTest() {
-	require.NoError(this.T(), this.clientProvider.Destroy())
-}
-
-func (this *Suite) TearDownSuite() {
-}
-
-func (this *Suite) TestGit() {
-	this.testGit(false)
-}
-
-func (this *Suite) TestGitIgnore() {
-	this.testGit(true)
-}
-
-func (this *Suite) testGit(ignoreCheckoutFiles bool) {
-	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+func testGit(t *testing.T, ignoreCheckoutFiles bool) {
+	clientProvider := getClientProvider(t)
+	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutTarball(
 		&GitCheckoutOptions{
 			User:     "git",
@@ -65,112 +41,122 @@ func (this *Suite) testGit(ignoreCheckoutFiles bool) {
 			CommitId: testSmartystreetsCommitId,
 		},
 	)
-	require.NoError(this.T(), err)
-	this.testSmartystreetsCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
+	require.NoError(t, err)
+	testSmartystreetsCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) TestGithub() {
-	this.testGithub(false)
+func TestGithub(t *testing.T) {
+	t.Parallel()
+	testGithub(t, false)
 }
 
-func (this *Suite) TestGithubIgnore() {
-	this.testGithub(true)
+func TestGithubIgnore(t *testing.T) {
+	t.Parallel()
+	testGithub(t, true)
 }
 
-func (this *Suite) testGithub(ignoreCheckoutFiles bool) {
-	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+func testGithub(t *testing.T, ignoreCheckoutFiles bool) {
+	clientProvider := getClientProvider(t)
+	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutTarball(
 		&GithubCheckoutOptions{
 			User:       "peter-edge",
 			Repository: "smartystreets_ruby",
 			Branch:     "master",
 			CommitId:   testSmartystreetsCommitId,
-			//SecurityOptions: NewGithubSecurityOptionsSsh(this.getSshOptions()),
+			//SecurityOptions: NewGithubSecurityOptionsSsh(getSshOptions()),
 		},
 	)
-	require.NoError(this.T(), err)
-	this.testSmartystreetsCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
+	require.NoError(t, err)
+	testSmartystreetsCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) testSmartystreetsCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
-	client, err := this.clientProvider.NewTempDirClient()
-	require.NoError(this.T(), err)
+func testSmartystreetsCheckoutTarball(t *testing.T, clientProvider exec.ClientProvider, checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
+	client, err := clientProvider.NewTempDirClient()
+	require.NoError(t, err)
 	err = tarexec.NewUntarClient(client, nil).Untar(checkoutTarball, ".")
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	_, err = os.Stat(client.Join(client.DirPath(), "smartystreets.gemspec"))
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	if !ignoreCheckoutFiles {
 		file, err := os.Open(client.Join(client.DirPath(), ".git/HEAD"))
-		require.NoError(this.T(), err)
+		require.NoError(t, err)
 		defer file.Close()
 		data, err := ioutil.ReadAll(file)
-		require.NoError(this.T(), err)
+		require.NoError(t, err)
 		var buffer bytes.Buffer
 		buffer.Write(data)
-		require.Equal(this.T(), testSmartystreetsCommitId, strings.TrimSpace(buffer.String()))
+		require.Equal(t, testSmartystreetsCommitId, strings.TrimSpace(buffer.String()))
 	} else {
 		_, err := os.Open(client.Join(client.DirPath(), ".git"))
-		require.Error(this.T(), err)
-		require.True(this.T(), os.IsNotExist(err))
+		require.Error(t, err)
+		require.True(t, os.IsNotExist(err))
 		_, err = os.Open(client.Join(client.DirPath(), ".gitignore"))
-		require.Error(this.T(), err)
-		require.True(this.T(), os.IsNotExist(err))
+		require.Error(t, err)
+		require.True(t, os.IsNotExist(err))
 	}
+	require.NoError(t, clientProvider.Destroy())
 }
 
-func (this *Suite) TestHg() {
-	this.testHg(false)
+func TestHg(t *testing.T) {
+	t.Parallel()
+	testHg(t, false)
 }
 
-func (this *Suite) TestHgIgnore() {
-	this.testHg(true)
+func TestHgIgnore(t *testing.T) {
+	t.Parallel()
+	testHg(t, true)
 }
 
-func (this *Suite) testHg(ignoreCheckoutFiles bool) {
-	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+func testHg(t *testing.T, ignoreCheckoutFiles bool) {
+	clientProvider := getClientProvider(t)
+	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutTarball(
 		&HgCheckoutOptions{
 			User:        "hg",
 			Host:        "bitbucket.org",
 			Path:        "/durin42/hg-git",
 			ChangesetId: testHgGitChangesetId,
-			//SecurityOptions: NewHgSecurityOptionsSsh(this.getSshOptions()),
+			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
 		},
 	)
-	require.NoError(this.T(), err)
-	this.testHgGitCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
+	require.NoError(t, err)
+	testHgGitCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) TestBitbucketHg() {
-	this.testBitbucketHg(false)
+func TestBitbucketHg(t *testing.T) {
+	t.Parallel()
+	testBitbucketHg(t, false)
 }
 
-func (this *Suite) TestBitbucketHgIgnore() {
-	this.testBitbucketHg(true)
+func TestBitbucketHgIgnore(t *testing.T) {
+	t.Parallel()
+	testBitbucketHg(t, true)
 }
 
-func (this *Suite) testBitbucketHg(ignoreCheckoutFiles bool) {
-	client := NewClient(this.clientProvider, &ClientOptions{ignoreCheckoutFiles})
+func testBitbucketHg(t *testing.T, ignoreCheckoutFiles bool) {
+	clientProvider := getClientProvider(t)
+	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutTarball(
 		&BitbucketCheckoutOptions{
 			BitbucketType: BitbucketTypeHg,
 			User:          "durin42",
 			Repository:    "hg-git",
 			ChangesetId:   testHgGitChangesetId,
-			//SecurityOptions: NewHgSecurityOptionsSsh(this.getSshOptions()),
+			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
 		},
 	)
-	require.NoError(this.T(), err)
-	this.testHgGitCheckoutTarball(checkoutTarball, ignoreCheckoutFiles)
+	require.NoError(t, err)
+	testHgGitCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
 }
 
-func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
-	client, err := this.clientProvider.NewTempDirClient()
-	require.NoError(this.T(), err)
+func testHgGitCheckoutTarball(t *testing.T, clientProvider exec.ClientProvider, checkoutTarball io.Reader, ignoreCheckoutFiles bool) {
+	client, err := clientProvider.NewTempDirClient()
+	require.NoError(t, err)
 	err = tarexec.NewUntarClient(client, nil).Untar(checkoutTarball, ".")
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	_, err = os.Stat(client.Join(client.DirPath(), "hggit/overlay.py"))
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	if !ignoreCheckoutFiles {
 		var buffer bytes.Buffer
 		err = client.Execute(
@@ -179,27 +165,34 @@ func (this *Suite) testHgGitCheckoutTarball(checkoutTarball io.Reader, ignoreChe
 				Stdout: &buffer,
 			},
 		)()
-		require.NoError(this.T(), err)
-		require.True(this.T(), strings.Contains(buffer.String(), testHgGitChangesetId[0:12]))
+		require.NoError(t, err)
+		require.True(t, strings.Contains(buffer.String(), testHgGitChangesetId[0:12]))
 	} else {
 		_, err := os.Open(client.Join(client.DirPath(), ".hg"))
-		require.Error(this.T(), err)
-		require.True(this.T(), os.IsNotExist(err))
+		require.Error(t, err)
+		require.True(t, os.IsNotExist(err))
 		_, err = os.Open(client.Join(client.DirPath(), ".hgignore"))
-		require.Error(this.T(), err)
-		require.True(this.T(), os.IsNotExist(err))
+		require.Error(t, err)
+		require.True(t, os.IsNotExist(err))
 	}
+	require.NoError(t, clientProvider.Destroy())
 }
 
-func (this *Suite) getSshOptions() *SshSecurityOptions {
+func getClientProvider(t *testing.T) exec.ClientProvider {
+	clientProvider, err := exec.NewClientProvider(&exec.OsExecOptions{})
+	require.NoError(t, err)
+	return clientProvider
+}
+
+func getSshOptions(t *testing.T) *SshSecurityOptions {
 	privateKeyReader, err := os.Open(os.Getenv("HOME") + "/.ssh/id_rsa")
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	defer privateKeyReader.Close()
 	data, err := ioutil.ReadAll(privateKeyReader)
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	var buffer bytes.Buffer
 	_, err = buffer.Write(data)
-	require.NoError(this.T(), err)
+	require.NoError(t, err)
 	return &SshSecurityOptions{
 		StrictHostKeyChecking: false,
 		PrivateKey:            &buffer,
