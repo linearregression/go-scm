@@ -42,6 +42,46 @@ Git SSH requires Git 2.3.0.
 
 ## Usage
 
+#### func  AllCheckoutOptionsTypes
+
+```go
+func AllCheckoutOptionsTypes() []CheckoutOptionsType
+```
+
+#### func  AllSecurityOptionsTypes
+
+```go
+func AllSecurityOptionsTypes() []SecurityOptionsType
+```
+
+#### func  CheckoutOptionsSwitch
+
+```go
+func CheckoutOptionsSwitch(
+	checkoutOptions CheckoutOptions,
+	gitCheckoutOptionsFunc func(gitCheckoutOptions *GitCheckoutOptions) error,
+	githubCheckoutOptionsFunc func(githubCheckoutOptions *GithubCheckoutOptions) error,
+	hgCheckoutOptionsFunc func(hgCheckoutOptions *HgCheckoutOptions) error,
+	bitbucketCheckoutOptionsFunc func(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error,
+) error
+```
+
+#### func  SecurityOptionsSwitch
+
+```go
+func SecurityOptionsSwitch(
+	securityOptions SecurityOptions,
+	sshSecurityOptionsFunc func(sshSecurityOptions *SshSecurityOptions) error,
+	accessTokenSecurityOptionsFunc func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error,
+) error
+```
+
+#### func  UnknownBitbucketType
+
+```go
+func UnknownBitbucketType(unknownBitbucketType interface{}) error
+```
+
 #### type AccessTokenSecurityOptions
 
 ```go
@@ -50,6 +90,13 @@ type AccessTokenSecurityOptions struct {
 }
 ```
 
+@gen-enumtype SecurityOptions accessToken 1
+
+#### func (*AccessTokenSecurityOptions) String
+
+```go
+func (this *AccessTokenSecurityOptions) String() string
+```
 
 #### func (*AccessTokenSecurityOptions) Type
 
@@ -71,6 +118,13 @@ type BitbucketCheckoutOptions struct {
 }
 ```
 
+@gen-enumtype CheckoutOptions bitbucket 3
+
+#### func (*BitbucketCheckoutOptions) String
+
+```go
+func (this *BitbucketCheckoutOptions) String() string
+```
 
 #### func (*BitbucketCheckoutOptions) Type
 
@@ -92,6 +146,12 @@ var (
 )
 ```
 
+#### func  BitbucketTypeOf
+
+```go
+func BitbucketTypeOf(s string) (BitbucketType, error)
+```
+
 #### func (BitbucketType) String
 
 ```go
@@ -102,6 +162,7 @@ func (this BitbucketType) String() string
 
 ```go
 type CheckoutOptions interface {
+	fmt.Stringer
 	Type() CheckoutOptionsType
 }
 ```
@@ -121,12 +182,58 @@ type CheckoutOptionsType uint
 
 
 ```go
-var (
-	CheckoutOptionsTypeGit       CheckoutOptionsType = 0
-	CheckoutOptionsTypeGithub    CheckoutOptionsType = 1
-	CheckoutOptionsTypeHg        CheckoutOptionsType = 2
-	CheckoutOptionsTypeBitbucket CheckoutOptionsType = 3
-)
+var CheckoutOptionsTypeBitbucket CheckoutOptionsType = 3
+```
+
+```go
+var CheckoutOptionsTypeGit CheckoutOptionsType = 0
+```
+
+```go
+var CheckoutOptionsTypeGithub CheckoutOptionsType = 1
+```
+
+```go
+var CheckoutOptionsTypeHg CheckoutOptionsType = 2
+```
+
+#### func  CheckoutOptionsTypeOf
+
+```go
+func CheckoutOptionsTypeOf(s string) (CheckoutOptionsType, error)
+```
+
+#### func (CheckoutOptionsType) Handle
+
+```go
+func (this CheckoutOptionsType) Handle(
+	checkoutOptionsTypeGitFunc func() error,
+	checkoutOptionsTypeGithubFunc func() error,
+	checkoutOptionsTypeHgFunc func() error,
+	checkoutOptionsTypeBitbucketFunc func() error,
+) error
+```
+
+#### func (CheckoutOptionsType) NewCheckoutOptions
+
+```go
+func (this CheckoutOptionsType) NewCheckoutOptions(
+	gitCheckoutOptionsFunc func() (*GitCheckoutOptions, error),
+	githubCheckoutOptionsFunc func() (*GithubCheckoutOptions, error),
+	hgCheckoutOptionsFunc func() (*HgCheckoutOptions, error),
+	bitbucketCheckoutOptionsFunc func() (*BitbucketCheckoutOptions, error),
+) (CheckoutOptions, error)
+```
+
+#### func (CheckoutOptionsType) Produce
+
+```go
+func (this CheckoutOptionsType) Produce(
+	checkoutOptionsTypeGitFunc func() (interface{}, error),
+	checkoutOptionsTypeGithubFunc func() (interface{}, error),
+	checkoutOptionsTypeHgFunc func() (interface{}, error),
+	checkoutOptionsTypeBitbucketFunc func() (interface{}, error),
+) (interface{}, error)
 ```
 
 #### func (CheckoutOptionsType) String
@@ -247,6 +354,13 @@ type GitCheckoutOptions struct {
 }
 ```
 
+@gen-enumtype CheckoutOptions git 0
+
+#### func (*GitCheckoutOptions) String
+
+```go
+func (this *GitCheckoutOptions) String() string
+```
 
 #### func (*GitCheckoutOptions) Type
 
@@ -266,6 +380,13 @@ type GithubCheckoutOptions struct {
 }
 ```
 
+@gen-enumtype CheckoutOptions github 1
+
+#### func (*GithubCheckoutOptions) String
+
+```go
+func (this *GithubCheckoutOptions) String() string
+```
 
 #### func (*GithubCheckoutOptions) Type
 
@@ -285,6 +406,13 @@ type HgCheckoutOptions struct {
 }
 ```
 
+@gen-enumtype CheckoutOptions hg 2
+
+#### func (*HgCheckoutOptions) String
+
+```go
+func (this *HgCheckoutOptions) String() string
+```
 
 #### func (*HgCheckoutOptions) Type
 
@@ -296,6 +424,7 @@ func (this *HgCheckoutOptions) Type() CheckoutOptionsType
 
 ```go
 type SecurityOptions interface {
+	fmt.Stringer
 	Type() SecurityOptionsType
 }
 ```
@@ -309,10 +438,44 @@ type SecurityOptionsType uint
 
 
 ```go
-var (
-	SecurityOptionsTypeSsh         SecurityOptionsType = 0
-	SecurityOptionsTypeAccessToken SecurityOptionsType = 1
-)
+var SecurityOptionsTypeAccessToken SecurityOptionsType = 1
+```
+
+```go
+var SecurityOptionsTypeSsh SecurityOptionsType = 0
+```
+
+#### func  SecurityOptionsTypeOf
+
+```go
+func SecurityOptionsTypeOf(s string) (SecurityOptionsType, error)
+```
+
+#### func (SecurityOptionsType) Handle
+
+```go
+func (this SecurityOptionsType) Handle(
+	securityOptionsTypeSshFunc func() error,
+	securityOptionsTypeAccessTokenFunc func() error,
+) error
+```
+
+#### func (SecurityOptionsType) NewSecurityOptions
+
+```go
+func (this SecurityOptionsType) NewSecurityOptions(
+	sshSecurityOptionsFunc func() (*SshSecurityOptions, error),
+	accessTokenSecurityOptionsFunc func() (*AccessTokenSecurityOptions, error),
+) (SecurityOptions, error)
+```
+
+#### func (SecurityOptionsType) Produce
+
+```go
+func (this SecurityOptionsType) Produce(
+	securityOptionsTypeSshFunc func() (interface{}, error),
+	securityOptionsTypeAccessTokenFunc func() (interface{}, error),
+) (interface{}, error)
 ```
 
 #### func (SecurityOptionsType) String
@@ -330,6 +493,13 @@ type SshSecurityOptions struct {
 }
 ```
 
+@gen-enumtype SecurityOptions ssh 0
+
+#### func (*SshSecurityOptions) String
+
+```go
+func (this *SshSecurityOptions) String() string
+```
 
 #### func (*SshSecurityOptions) Type
 
@@ -356,11 +526,11 @@ type ValidationErrorType string
 
 ```go
 var (
-	ValidationErrorTypeRequiredFieldMissing                  ValidationErrorType = "RequiredFieldMissing"
-	ValidationErrorTypeFieldShouldNotBeSet                   ValidationErrorType = "FieldShouldNotBeSet"
+	ValidationErrorTypeRequiredFieldMissing                         ValidationErrorType = "RequiredFieldMissing"
+	ValidationErrorTypeFieldShouldNotBeSet                          ValidationErrorType = "FieldShouldNotBeSet"
 	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
 	ValidationErrorTypeUnknownCheckoutOptionsType                   ValidationErrorType = "UnknownCheckoutOptionsType"
 	ValidationErrorTypeUnknownSecurityOptionsType                   ValidationErrorType = "UnknownSecurityOptionsType"
-	ValidationErrorTypeUnknownBitbucketType                  ValidationErrorType = "UnknownBitbucketType"
+	ValidationErrorTypeUnknownBitbucketType                         ValidationErrorType = "UnknownBitbucketType"
 )
 ```
