@@ -35,11 +35,11 @@ check_for_codeship:
 
 deps:
 	go get -d -v ./...
-	go install github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
+	go get github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 
 updatedeps:
 	go get -d -v -u -f ./...
-	go install github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
+	go get github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 
 testdeps: deps
 	go get -d -v -t ./...
