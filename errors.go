@@ -10,8 +10,6 @@ var (
 	ValidationErrorTypeRequiredFieldMissing                         ValidationErrorType = "RequiredFieldMissing"
 	ValidationErrorTypeFieldShouldNotBeSet                          ValidationErrorType = "FieldShouldNotBeSet"
 	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
-	ValidationErrorTypeUnknownCheckoutOptionsType                   ValidationErrorType = "UnknownCheckoutOptionsType"
-	ValidationErrorTypeUnknownSecurityOptionsType                   ValidationErrorType = "UnknownSecurityOptionsType"
 )
 
 type ValidationErrorType string
@@ -50,14 +48,6 @@ func newValidationErrorFieldShouldNotBeSet(objectType string, fieldPath ...strin
 
 func newValidationErrorSecurityNotImplementedForCheckoutOptionsType(securityType string, checkoutType string) ValidationError {
 	return newValidationError(ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType, map[string]string{"securityType": securityType, "checkoutType": checkoutType})
-}
-
-func newValidationErrorUnknownCheckoutOptionsType(checkoutType string) ValidationError {
-	return newValidationError(ValidationErrorTypeUnknownCheckoutOptionsType, map[string]string{"checkoutType": checkoutType})
-}
-
-func newValidationErrorUnknownSecurityOptionsType(securityType string) ValidationError {
-	return newValidationError(ValidationErrorTypeUnknownSecurityOptionsType, map[string]string{"securityType": securityType})
 }
 
 func newInternalError(validationError ValidationError) error {
