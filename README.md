@@ -54,7 +54,7 @@ type AccessTokenSecurityOptions struct {
 #### func (*AccessTokenSecurityOptions) Type
 
 ```go
-func (this *AccessTokenSecurityOptions) Type() SecurityType
+func (this *AccessTokenSecurityOptions) Type() SecurityOptionsType
 ```
 
 #### type BitbucketCheckoutOptions
@@ -75,7 +75,7 @@ type BitbucketCheckoutOptions struct {
 #### func (*BitbucketCheckoutOptions) Type
 
 ```go
-func (this *BitbucketCheckoutOptions) Type() CheckoutType
+func (this *BitbucketCheckoutOptions) Type() CheckoutOptionsType
 ```
 
 #### type BitbucketType
@@ -102,7 +102,7 @@ func (this BitbucketType) String() string
 
 ```go
 type CheckoutOptions interface {
-	Type() CheckoutType
+	Type() CheckoutOptionsType
 }
 ```
 
@@ -113,26 +113,26 @@ type CheckoutOptions interface {
 func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error)
 ```
 
-#### type CheckoutType
+#### type CheckoutOptionsType
 
 ```go
-type CheckoutType uint
+type CheckoutOptionsType uint
 ```
 
 
 ```go
 var (
-	CheckoutTypeGit       CheckoutType = 0
-	CheckoutTypeGithub    CheckoutType = 1
-	CheckoutTypeHg        CheckoutType = 2
-	CheckoutTypeBitbucket CheckoutType = 3
+	CheckoutOptionsTypeGit       CheckoutOptionsType = 0
+	CheckoutOptionsTypeGithub    CheckoutOptionsType = 1
+	CheckoutOptionsTypeHg        CheckoutOptionsType = 2
+	CheckoutOptionsTypeBitbucket CheckoutOptionsType = 3
 )
 ```
 
-#### func (CheckoutType) String
+#### func (CheckoutOptionsType) String
 
 ```go
-func (this CheckoutType) String() string
+func (this CheckoutOptionsType) String() string
 ```
 
 #### type Client
@@ -251,7 +251,7 @@ type GitCheckoutOptions struct {
 #### func (*GitCheckoutOptions) Type
 
 ```go
-func (this *GitCheckoutOptions) Type() CheckoutType
+func (this *GitCheckoutOptions) Type() CheckoutOptionsType
 ```
 
 #### type GithubCheckoutOptions
@@ -270,7 +270,7 @@ type GithubCheckoutOptions struct {
 #### func (*GithubCheckoutOptions) Type
 
 ```go
-func (this *GithubCheckoutOptions) Type() CheckoutType
+func (this *GithubCheckoutOptions) Type() CheckoutOptionsType
 ```
 
 #### type HgCheckoutOptions
@@ -289,36 +289,36 @@ type HgCheckoutOptions struct {
 #### func (*HgCheckoutOptions) Type
 
 ```go
-func (this *HgCheckoutOptions) Type() CheckoutType
+func (this *HgCheckoutOptions) Type() CheckoutOptionsType
 ```
 
 #### type SecurityOptions
 
 ```go
 type SecurityOptions interface {
-	Type() SecurityType
+	Type() SecurityOptionsType
 }
 ```
 
 
-#### type SecurityType
+#### type SecurityOptionsType
 
 ```go
-type SecurityType uint
+type SecurityOptionsType uint
 ```
 
 
 ```go
 var (
-	SecurityTypeSsh         SecurityType = 0
-	SecurityTypeAccessToken SecurityType = 1
+	SecurityOptionsTypeSsh         SecurityOptionsType = 0
+	SecurityOptionsTypeAccessToken SecurityOptionsType = 1
 )
 ```
 
-#### func (SecurityType) String
+#### func (SecurityOptionsType) String
 
 ```go
-func (this SecurityType) String() string
+func (this SecurityOptionsType) String() string
 ```
 
 #### type SshSecurityOptions
@@ -334,7 +334,7 @@ type SshSecurityOptions struct {
 #### func (*SshSecurityOptions) Type
 
 ```go
-func (this *SshSecurityOptions) Type() SecurityType
+func (this *SshSecurityOptions) Type() SecurityOptionsType
 ```
 
 #### type ValidationError
@@ -358,9 +358,9 @@ type ValidationErrorType string
 var (
 	ValidationErrorTypeRequiredFieldMissing                  ValidationErrorType = "RequiredFieldMissing"
 	ValidationErrorTypeFieldShouldNotBeSet                   ValidationErrorType = "FieldShouldNotBeSet"
-	ValidationErrorTypeSecurityNotImplementedForCheckoutType ValidationErrorType = "SecurityNotImplementedForCheckoutType"
-	ValidationErrorTypeUnknownCheckoutType                   ValidationErrorType = "UnknownCheckoutType"
-	ValidationErrorTypeUnknownSecurityType                   ValidationErrorType = "UnknownSecurityType"
+	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
+	ValidationErrorTypeUnknownCheckoutOptionsType                   ValidationErrorType = "UnknownCheckoutOptionsType"
+	ValidationErrorTypeUnknownSecurityOptionsType                   ValidationErrorType = "UnknownSecurityOptionsType"
 	ValidationErrorTypeUnknownBitbucketType                  ValidationErrorType = "UnknownBitbucketType"
 )
 ```

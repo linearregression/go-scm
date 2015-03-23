@@ -5,32 +5,32 @@ import "bytes"
 func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
 	var securityOptions SecurityOptions
 	if externalCheckoutOptions.SecurityOptions != nil {
-		securityType, err := SecurityTypeOf(externalCheckoutOptions.SecurityOptions.Type)
+		securityType, err := SecurityOptionsTypeOf(externalCheckoutOptions.SecurityOptions.Type)
 		if err != nil {
 			return nil, err
 		}
 		switch securityType {
-		case SecurityTypeSsh:
+		case SecurityOptionsTypeSsh:
 			var privateKey bytes.Buffer
 			privateKey.WriteString(externalCheckoutOptions.SecurityOptions.PrivateKey)
 			securityOptions = &SshSecurityOptions{
 				StrictHostKeyChecking: externalCheckoutOptions.SecurityOptions.StrictHostKeyChecking,
 				PrivateKey:            &privateKey,
 			}
-		case SecurityTypeAccessToken:
+		case SecurityOptionsTypeAccessToken:
 			securityOptions = &AccessTokenSecurityOptions{
 				AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
 			}
 		default:
-			return nil, UnknownSecurityType(securityType)
+			return nil, UnknownSecurityOptionsType(securityType)
 		}
 	}
-	checkoutType, err := CheckoutTypeOf(externalCheckoutOptions.Type)
+	checkoutType, err := CheckoutOptionsTypeOf(externalCheckoutOptions.Type)
 	if err != nil {
 		return nil, err
 	}
 	switch checkoutType {
-	case CheckoutTypeGit:
+	case CheckoutOptionsTypeGit:
 		return &GitCheckoutOptions{
 			User:            externalCheckoutOptions.User,
 			Host:            externalCheckoutOptions.Host,
@@ -39,7 +39,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			CommitId:        externalCheckoutOptions.CommitId,
 			SecurityOptions: securityOptions,
 		}, nil
-	case CheckoutTypeGithub:
+	case CheckoutOptionsTypeGithub:
 		return &GithubCheckoutOptions{
 			User:            externalCheckoutOptions.User,
 			Repository:      externalCheckoutOptions.Repository,
@@ -47,7 +47,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			CommitId:        externalCheckoutOptions.CommitId,
 			SecurityOptions: securityOptions,
 		}, nil
-	case CheckoutTypeHg:
+	case CheckoutOptionsTypeHg:
 		return &HgCheckoutOptions{
 			User:            externalCheckoutOptions.User,
 			Host:            externalCheckoutOptions.Host,
@@ -55,7 +55,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			ChangesetId:     externalCheckoutOptions.ChangesetId,
 			SecurityOptions: securityOptions,
 		}, nil
-	case CheckoutTypeBitbucket:
+	case CheckoutOptionsTypeBitbucket:
 		bitbucketType, err := BitbucketTypeOf(externalCheckoutOptions.BitbucketType)
 		if err != nil {
 			return nil, err
@@ -70,6 +70,6 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 			SecurityOptions: securityOptions,
 		}, nil
 	default:
-		return nil, UnknownCheckoutType(checkoutType)
+		return nil, UnknownCheckoutOptionsType(checkoutType)
 	}
 }

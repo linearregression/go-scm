@@ -2,16 +2,16 @@ package scm
 
 func validateCheckoutOptions(checkoutOptions CheckoutOptions) ValidationError {
 	switch checkoutOptions.Type() {
-	case CheckoutTypeGit:
+	case CheckoutOptionsTypeGit:
 		return validateGitCheckoutOptions(checkoutOptions.(*GitCheckoutOptions))
-	case CheckoutTypeGithub:
+	case CheckoutOptionsTypeGithub:
 		return validateGithubCheckoutOptions(checkoutOptions.(*GithubCheckoutOptions))
-	case CheckoutTypeHg:
+	case CheckoutOptionsTypeHg:
 		return validateHgCheckoutOptions(checkoutOptions.(*HgCheckoutOptions))
-	case CheckoutTypeBitbucket:
+	case CheckoutOptionsTypeBitbucket:
 		return validateBitbucketCheckoutOptions(checkoutOptions.(*BitbucketCheckoutOptions))
 	default:
-		return newValidationErrorUnknownCheckoutType(checkoutOptions.Type().String())
+		return newValidationErrorUnknownCheckoutOptionsType(checkoutOptions.Type().String())
 	}
 }
 
@@ -32,7 +32,7 @@ func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) Validati
 		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "CommitId")
 	}
 	if gitCheckoutOptions.SecurityOptions != nil {
-		if err := validateSecurityOptions(gitCheckoutOptions.SecurityOptions, CheckoutTypeGit, SecurityTypeSsh); err != nil {
+		if err := validateSecurityOptions(gitCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGit, SecurityOptionsTypeSsh); err != nil {
 			return nil
 		}
 	}
@@ -53,7 +53,7 @@ func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions)
 		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "CommitId")
 	}
 	if githubCheckoutOptions.SecurityOptions != nil {
-		if err := validateSecurityOptions(githubCheckoutOptions.SecurityOptions, CheckoutTypeGithub, SecurityTypeSsh, SecurityTypeAccessToken); err != nil {
+		if err := validateSecurityOptions(githubCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGithub, SecurityOptionsTypeSsh, SecurityOptionsTypeAccessToken); err != nil {
 			return nil
 		}
 	}
@@ -74,7 +74,7 @@ func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) ValidationE
 		return newValidationErrorRequiredFieldMissing("*HgCheckoutOptions", "ChangesetId")
 	}
 	if hgCheckoutOptions.SecurityOptions != nil {
-		if err := validateSecurityOptions(hgCheckoutOptions.SecurityOptions, CheckoutTypeHg, SecurityTypeSsh); err != nil {
+		if err := validateSecurityOptions(hgCheckoutOptions.SecurityOptions, CheckoutOptionsTypeHg, SecurityOptionsTypeSsh); err != nil {
 			return nil
 		}
 	}
@@ -113,24 +113,24 @@ func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckou
 		return newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String())
 	}
 	if bitbucketCheckoutOptions.SecurityOptions != nil {
-		if err := validateSecurityOptions(bitbucketCheckoutOptions.SecurityOptions, CheckoutTypeBitbucket, SecurityTypeSsh); err != nil {
+		if err := validateSecurityOptions(bitbucketCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucket, SecurityOptionsTypeSsh); err != nil {
 			return nil
 		}
 	}
 	return nil
 }
 
-func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutType, allowedTypes ...SecurityType) ValidationError {
-	if !isAllowedSecurityType(securityOptions.Type(), allowedTypes) {
-		return newValidationErrorSecurityNotImplementedForCheckoutType(securityOptions.Type().String(), checkoutType.String())
+func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutOptionsType, allowedTypes ...SecurityOptionsType) ValidationError {
+	if !isAllowedSecurityOptionsType(securityOptions.Type(), allowedTypes) {
+		return newValidationErrorSecurityNotImplementedForCheckoutOptionsType(securityOptions.Type().String(), checkoutType.String())
 	}
 	switch securityOptions.Type() {
-	case SecurityTypeSsh:
+	case SecurityOptionsTypeSsh:
 		return validateSshSecurityOptions(securityOptions.(*SshSecurityOptions))
-	case SecurityTypeAccessToken:
+	case SecurityOptionsTypeAccessToken:
 		return validateAccessTokenSecurityOptions(securityOptions.(*AccessTokenSecurityOptions))
 	default:
-		return newValidationErrorUnknownSecurityType(securityOptions.Type().String())
+		return newValidationErrorUnknownSecurityOptionsType(securityOptions.Type().String())
 	}
 	return nil
 }
@@ -149,7 +149,7 @@ func validateAccessTokenSecurityOptions(accessTokenSecurityOptions *AccessTokenS
 	return nil
 }
 
-func isAllowedSecurityType(securityType SecurityType, allowedTypes []SecurityType) bool {
+func isAllowedSecurityOptionsType(securityType SecurityOptionsType, allowedTypes []SecurityOptionsType) bool {
 	for _, allowedType := range allowedTypes {
 		if securityType == allowedType {
 			return true

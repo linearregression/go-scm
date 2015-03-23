@@ -6,10 +6,9 @@ import (
 	"github.com/peter-edge/go-exec"
 )
 
-type CheckoutOptions interface {
-	Type() CheckoutType
-}
+//go:generate gen-enumtype
 
+// @gen-enumtype CheckoutOptions git 0
 type GitCheckoutOptions struct {
 	User            string
 	Host            string
@@ -19,10 +18,7 @@ type GitCheckoutOptions struct {
 	SecurityOptions SecurityOptions
 }
 
-func (this *GitCheckoutOptions) Type() CheckoutType {
-	return CheckoutTypeGit
-}
-
+// @gen-enumtype CheckoutOptions github 1
 type GithubCheckoutOptions struct {
 	User            string
 	Repository      string
@@ -31,10 +27,7 @@ type GithubCheckoutOptions struct {
 	SecurityOptions SecurityOptions
 }
 
-func (this *GithubCheckoutOptions) Type() CheckoutType {
-	return CheckoutTypeGithub
-}
-
+// @gen-enumtype CheckoutOptions hg 2
 type HgCheckoutOptions struct {
 	User            string
 	Host            string
@@ -43,10 +36,7 @@ type HgCheckoutOptions struct {
 	SecurityOptions SecurityOptions
 }
 
-func (this *HgCheckoutOptions) Type() CheckoutType {
-	return CheckoutTypeHg
-}
-
+// @gen-enumtype CheckoutOptions bitbucket 3
 type BitbucketCheckoutOptions struct {
 	BitbucketType   BitbucketType
 	User            string
@@ -57,29 +47,15 @@ type BitbucketCheckoutOptions struct {
 	SecurityOptions SecurityOptions
 }
 
-func (this *BitbucketCheckoutOptions) Type() CheckoutType {
-	return CheckoutTypeBitbucket
-}
-
-type SecurityOptions interface {
-	Type() SecurityType
-}
-
+// @gen-enumtype SecurityOptions ssh 0
 type SshSecurityOptions struct {
 	StrictHostKeyChecking bool
 	PrivateKey            io.Reader
 }
 
-func (this *SshSecurityOptions) Type() SecurityType {
-	return SecurityTypeSsh
-}
-
+// @gen-enumtype SecurityOptions accessToken 1
 type AccessTokenSecurityOptions struct {
 	AccessToken string
-}
-
-func (this *AccessTokenSecurityOptions) Type() SecurityType {
-	return SecurityTypeAccessToken
 }
 
 type ClientOptions struct {

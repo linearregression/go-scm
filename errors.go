@@ -9,9 +9,9 @@ import (
 var (
 	ValidationErrorTypeRequiredFieldMissing                  ValidationErrorType = "RequiredFieldMissing"
 	ValidationErrorTypeFieldShouldNotBeSet                   ValidationErrorType = "FieldShouldNotBeSet"
-	ValidationErrorTypeSecurityNotImplementedForCheckoutType ValidationErrorType = "SecurityNotImplementedForCheckoutType"
-	ValidationErrorTypeUnknownCheckoutType                   ValidationErrorType = "UnknownCheckoutType"
-	ValidationErrorTypeUnknownSecurityType                   ValidationErrorType = "UnknownSecurityType"
+	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
+	ValidationErrorTypeUnknownCheckoutOptionsType                   ValidationErrorType = "UnknownCheckoutOptionsType"
+	ValidationErrorTypeUnknownSecurityOptionsType                   ValidationErrorType = "UnknownSecurityOptionsType"
 	ValidationErrorTypeUnknownBitbucketType                  ValidationErrorType = "UnknownBitbucketType"
 )
 
@@ -49,16 +49,16 @@ func newValidationErrorFieldShouldNotBeSet(objectType string, fieldPath ...strin
 	return newValidationError(ValidationErrorTypeFieldShouldNotBeSet, map[string]string{"type": objectType, "fieldPath": strings.Join(fieldPath, ".")})
 }
 
-func newValidationErrorSecurityNotImplementedForCheckoutType(securityType string, checkoutType string) ValidationError {
-	return newValidationError(ValidationErrorTypeSecurityNotImplementedForCheckoutType, map[string]string{"securityType": securityType, "checkoutType": checkoutType})
+func newValidationErrorSecurityNotImplementedForCheckoutOptionsType(securityType string, checkoutType string) ValidationError {
+	return newValidationError(ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType, map[string]string{"securityType": securityType, "checkoutType": checkoutType})
 }
 
-func newValidationErrorUnknownCheckoutType(checkoutType string) ValidationError {
-	return newValidationError(ValidationErrorTypeUnknownCheckoutType, map[string]string{"checkoutType": checkoutType})
+func newValidationErrorUnknownCheckoutOptionsType(checkoutType string) ValidationError {
+	return newValidationError(ValidationErrorTypeUnknownCheckoutOptionsType, map[string]string{"checkoutType": checkoutType})
 }
 
-func newValidationErrorUnknownSecurityType(securityType string) ValidationError {
-	return newValidationError(ValidationErrorTypeUnknownSecurityType, map[string]string{"securityType": securityType})
+func newValidationErrorUnknownSecurityOptionsType(securityType string) ValidationError {
+	return newValidationError(ValidationErrorTypeUnknownSecurityOptionsType, map[string]string{"securityType": securityType})
 }
 
 func newValidationErrorUnknownBitbucketType(bitbucketType string) ValidationError {
