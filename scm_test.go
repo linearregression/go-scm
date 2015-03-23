@@ -31,8 +31,8 @@ func TestGitIgnore(t *testing.T) {
 
 func testGit(t *testing.T, ignoreCheckoutFiles bool) {
 	clientProvider := getClientProvider(t)
-	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutTarball(
+	checkoutTarball, err := CheckoutTarball(
+		clientProvider,
 		&GitCheckoutOptions{
 			User:     "git",
 			Host:     "github.com",
@@ -40,6 +40,7 @@ func testGit(t *testing.T, ignoreCheckoutFiles bool) {
 			Branch:   "master",
 			CommitId: testSmartystreetsCommitId,
 		},
+		ignoreCheckoutFiles,
 	)
 	require.NoError(t, err)
 	testSmartystreetsCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
@@ -57,8 +58,8 @@ func TestGithubIgnore(t *testing.T) {
 
 func testGithub(t *testing.T, ignoreCheckoutFiles bool) {
 	clientProvider := getClientProvider(t)
-	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutTarball(
+	checkoutTarball, err := CheckoutTarball(
+		clientProvider,
 		&GithubCheckoutOptions{
 			User:       "peter-edge",
 			Repository: "smartystreets_ruby",
@@ -66,6 +67,7 @@ func testGithub(t *testing.T, ignoreCheckoutFiles bool) {
 			CommitId:   testSmartystreetsCommitId,
 			//SecurityOptions: NewGithubSecurityOptionsSsh(getSshOptions()),
 		},
+		ignoreCheckoutFiles,
 	)
 	require.NoError(t, err)
 	testSmartystreetsCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
@@ -110,8 +112,8 @@ func TestHgIgnore(t *testing.T) {
 
 func testHg(t *testing.T, ignoreCheckoutFiles bool) {
 	clientProvider := getClientProvider(t)
-	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutTarball(
+	checkoutTarball, err := CheckoutTarball(
+		clientProvider,
 		&HgCheckoutOptions{
 			User:        "hg",
 			Host:        "bitbucket.org",
@@ -119,6 +121,7 @@ func testHg(t *testing.T, ignoreCheckoutFiles bool) {
 			ChangesetId: testHgGitChangesetId,
 			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
 		},
+		ignoreCheckoutFiles,
 	)
 	require.NoError(t, err)
 	testHgGitCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)
@@ -136,14 +139,15 @@ func TestBitbucketHgIgnore(t *testing.T) {
 
 func testBitbucketHg(t *testing.T, ignoreCheckoutFiles bool) {
 	clientProvider := getClientProvider(t)
-	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
-	checkoutTarball, err := client.CheckoutTarball(
+	checkoutTarball, err := CheckoutTarball(
+		clientProvider,
 		&BitbucketHgCheckoutOptions{
 			User:        "durin42",
 			Repository:  "hg-git",
 			ChangesetId: testHgGitChangesetId,
 			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
 		},
+		ignoreCheckoutFiles,
 	)
 	require.NoError(t, err)
 	testHgGitCheckoutTarball(t, clientProvider, checkoutTarball, ignoreCheckoutFiles)

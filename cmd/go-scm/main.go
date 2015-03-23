@@ -56,6 +56,8 @@ func main() {
 		)
 		checkError(etcdmarshalApi.Read(etcdInputKey, &externalCheckoutOptions))
 	}
+	checkoutOptions, err := scm.ConvertExternalCheckoutOptions(&externalCheckoutOptions)
+	checkError(err)
 
 	execClientProvider, err := exec.NewClientProvider(
 		&exec.OsExecOptions{
@@ -66,9 +68,7 @@ func main() {
 
 	var path string
 	if tarballName != "" {
-		client := scm.NewClient(execClientProvider, &scm.ClientOptions{IgnoreCheckoutFiles: ignoreCheckoutFiles})
-		externalClient := scm.NewExternalClient(client)
-		tarballReader, err := externalClient.CheckoutTarball(&externalCheckoutOptions)
+		tarballReader, err := scm.CheckoutTarball(execClientProvider, checkoutOptions, ignoreCheckoutFiles)
 		dirPath := baseDirPath
 		if dirPath == "" {
 			dirPath = os.TempDir()
@@ -83,12 +83,10 @@ func main() {
 		if clonePath == "" {
 			clonePath = "clone"
 		}
-		directClient := scm.NewDirectClient(execClientProvider)
-		externalDirectClient := scm.NewExternalDirectClient(directClient)
 		executor, err := execClientProvider.NewTempDirExecutorReadFileManager()
 		checkError(err)
 		path = filepath.Join(executor.DirPath(), clonePath)
-		checkError(externalDirectClient.Checkout(&externalCheckoutOptions, executor, clonePath))
+		checkError(scm.Checkout(execClientProvider, checkoutOptions, executor, clonePath))
 	}
 
 	if hostBaseDirPath != "" {

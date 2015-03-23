@@ -1,10 +1,6 @@
 package scm
 
-import (
-	"io"
-
-	"github.com/peter-edge/go-exec"
-)
+import "bytes"
 
 type ExternalCheckoutOptions struct {
 	Type            string                   `json:"type,omitempty" yaml:"type,omitempty"`
@@ -25,22 +21,87 @@ type ExternalSecurityOptions struct {
 	AccessToken           string `json:"access_token,omitempty" yaml:"access_token,omitempty"`
 }
 
-type ExternalClient interface {
-	CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error)
-}
-
-func NewExternalClient(client Client) ExternalClient {
-	return newExternalClient(client)
-}
-
-type ExternalDirectClient interface {
-	Checkout(externalCheckoutOptions *ExternalCheckoutOptions, executor exec.Executor, path string) error
-}
-
-func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient {
-	return newExternalDirectClient(directClient)
-}
-
 func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
 	return convertExternalCheckoutOptions(externalCheckoutOptions)
+}
+
+// ***** PRIVATE *****
+
+func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
+	var securityOptions SecurityOptions
+	if externalCheckoutOptions.SecurityOptions != nil {
+		securityOptionsType, err := SecurityOptionsTypeOf(externalCheckoutOptions.SecurityOptions.Type)
+		if err != nil {
+			return nil, err
+		}
+		securityOptions, err = securityOptionsType.NewSecurityOptions(
+			func() (*SshSecurityOptions, error) {
+				var privateKey bytes.Buffer
+				privateKey.WriteString(externalCheckoutOptions.SecurityOptions.PrivateKey)
+				return &SshSecurityOptions{
+					StrictHostKeyChecking: externalCheckoutOptions.SecurityOptions.StrictHostKeyChecking,
+					PrivateKey:            &privateKey,
+				}, nil
+			},
+			func() (*AccessTokenSecurityOptions, error) {
+				return &AccessTokenSecurityOptions{
+					AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
+				}, nil
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	checkoutOptionsType, err := CheckoutOptionsTypeOf(externalCheckoutOptions.Type)
+	if err != nil {
+		return nil, err
+	}
+	return checkoutOptionsType.NewCheckoutOptions(
+		func() (*GitCheckoutOptions, error) {
+			return &GitCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Host:            externalCheckoutOptions.Host,
+				Path:            externalCheckoutOptions.Path,
+				Branch:          externalCheckoutOptions.Branch,
+				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*GithubCheckoutOptions, error) {
+			return &GithubCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
+				Branch:          externalCheckoutOptions.Branch,
+				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*HgCheckoutOptions, error) {
+			return &HgCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Host:            externalCheckoutOptions.Host,
+				Path:            externalCheckoutOptions.Path,
+				ChangesetId:     externalCheckoutOptions.ChangesetId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*BitbucketGitCheckoutOptions, error) {
+			return &BitbucketGitCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
+				Branch:          externalCheckoutOptions.Branch,
+				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*BitbucketHgCheckoutOptions, error) {
+			return &BitbucketHgCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
+				ChangesetId:     externalCheckoutOptions.ChangesetId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+	)
 }

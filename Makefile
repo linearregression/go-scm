@@ -84,10 +84,10 @@ xccompile: linuxcompile darwincompile
 container: linuxcompile
 	docker build --file=Dockerfile.goscm -t pedge/goscm .
 
-linuxdockercompile: libcontainer
+linuxdockercompile: buildcontainer
 	bash makebin/docker_compile.sh linux
 
-darwindockercompile: libcontainer
+darwindockercompile: buildcontainer
 	bash makebin/docker_compile.sh darwin
 
 doc:
