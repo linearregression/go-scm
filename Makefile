@@ -6,6 +6,7 @@
 	updatedeps \
 	testdeps \
 	updatetestdeps \
+	generate \
 	build \
 	install \
 	test \
@@ -31,11 +32,14 @@ check_for_codeship:
 	@ if ! which codeship > /dev/null; then \
 			echo "error: codeship not installed" >&2; \
 	  fi
+
 deps:
 	go get -d -v ./...
+	go install github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 
 updatedeps:
 	go get -d -v -u -f ./...
+	go install github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 
 testdeps: deps
 	go get -d -v -t ./...
@@ -43,33 +47,36 @@ testdeps: deps
 updatetestdeps: updatedeps
 	go get -d -v -t -u -f ./...
 
-build: deps
+generate: deps
+	go generate ./...
+
+build: deps generate
 	go build ./...
 
-install: deps
+install: deps generate
 	go install ./...
 
 
-test: testdeps
+test: testdeps generate
 	go test -test.v ./...
 
-codeshipsteps: check_for_codeship 
+codeshipsteps: check_for_codeship generate
 	codeship steps
 
-cov: testdeps
+cov: testdeps generate
 	go get -v github.com/axw/gocov/gocov
 	gocov test | gocov report
 
-buildcontainer: testdeps
+buildcontainer: testdeps generate
 	docker build --file=Dockerfile.build -t pedge/goscmbuild .
 
-testcontainer: testdeps
+testcontainer: testdeps generate
 	docker build --file=Dockerfile.test -t pedge/goscmtest .
 
-linuxcompile: deps
+linuxcompile: deps generate
 	bash makebin/compile.sh linux
 
-darwincompile: deps
+darwincompile: deps generate
 	bash makebin/compile.sh darwin
 
 xccompile: linuxcompile darwincompile
