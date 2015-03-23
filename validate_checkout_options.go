@@ -1,21 +1,16 @@
 package scm
 
-func validateCheckoutOptions(checkoutOptions CheckoutOptions) ValidationError {
-	switch checkoutOptions.Type() {
-	case CheckoutOptionsTypeGit:
-		return validateGitCheckoutOptions(checkoutOptions.(*GitCheckoutOptions))
-	case CheckoutOptionsTypeGithub:
-		return validateGithubCheckoutOptions(checkoutOptions.(*GithubCheckoutOptions))
-	case CheckoutOptionsTypeHg:
-		return validateHgCheckoutOptions(checkoutOptions.(*HgCheckoutOptions))
-	case CheckoutOptionsTypeBitbucket:
-		return validateBitbucketCheckoutOptions(checkoutOptions.(*BitbucketCheckoutOptions))
-	default:
-		return newValidationErrorUnknownCheckoutOptionsType(checkoutOptions.Type().String())
-	}
+func validateCheckoutOptions(checkoutOptions CheckoutOptions) error {
+	return CheckoutOptionsSwitch(
+		checkoutOptions,
+		validateGitCheckoutOptions,
+		validateGithubCheckoutOptions,
+		validateHgCheckoutOptions,
+		validateBitbucketCheckoutOptions,
+	)
 }
 
-func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) ValidationError {
+func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) error {
 	if gitCheckoutOptions.User == "" {
 		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "User")
 	}
@@ -39,7 +34,7 @@ func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) Validati
 	return nil
 }
 
-func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions) ValidationError {
+func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions) error {
 	if githubCheckoutOptions.User == "" {
 		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "User")
 	}
@@ -60,7 +55,7 @@ func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions)
 	return nil
 }
 
-func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) ValidationError {
+func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) error {
 	if hgCheckoutOptions.User == "" {
 		return newValidationErrorRequiredFieldMissing("*HgCheckoutOptions", "User")
 	}
@@ -81,7 +76,7 @@ func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) ValidationE
 	return nil
 }
 
-func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckoutOptions) ValidationError {
+func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error {
 	if bitbucketCheckoutOptions.User == "" {
 		return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "User")
 	}
@@ -120,29 +115,25 @@ func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckou
 	return nil
 }
 
-func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutOptionsType, allowedTypes ...SecurityOptionsType) ValidationError {
+func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutOptionsType, allowedTypes ...SecurityOptionsType) error {
 	if !isAllowedSecurityOptionsType(securityOptions.Type(), allowedTypes) {
 		return newValidationErrorSecurityNotImplementedForCheckoutOptionsType(securityOptions.Type().String(), checkoutType.String())
 	}
-	switch securityOptions.Type() {
-	case SecurityOptionsTypeSsh:
-		return validateSshSecurityOptions(securityOptions.(*SshSecurityOptions))
-	case SecurityOptionsTypeAccessToken:
-		return validateAccessTokenSecurityOptions(securityOptions.(*AccessTokenSecurityOptions))
-	default:
-		return newValidationErrorUnknownSecurityOptionsType(securityOptions.Type().String())
-	}
-	return nil
+	return SecurityOptionsSwitch(
+		securityOptions,
+		validateSshSecurityOptions,
+		validateAccessTokenSecurityOptions,
+	)
 }
 
-func validateSshSecurityOptions(sshSecurityOptions *SshSecurityOptions) ValidationError {
+func validateSshSecurityOptions(sshSecurityOptions *SshSecurityOptions) error {
 	//if sshSecurityOptions.PrivateKey == nil {
 	//return newValidationErrorRequiredFieldMissing("SshSecurityOptions", "PrivateKey")
 	//}
 	return nil
 }
 
-func validateAccessTokenSecurityOptions(accessTokenSecurityOptions *AccessTokenSecurityOptions) ValidationError {
+func validateAccessTokenSecurityOptions(accessTokenSecurityOptions *AccessTokenSecurityOptions) error {
 	if accessTokenSecurityOptions.AccessToken == "" {
 		return newValidationErrorRequiredFieldMissing("AccessTokenSecurityOptions", "AccessToken")
 	}

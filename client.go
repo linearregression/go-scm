@@ -52,18 +52,21 @@ func (this *client) Checkout(checkoutOptions CheckoutOptions, executor exec.Exec
 	if err := validateCheckoutOptions(checkoutOptions); err != nil {
 		return err
 	}
-	switch checkoutOptions.Type() {
-	case CheckoutOptionsTypeGit:
-		return this.checkoutGit(checkoutOptions.(*GitCheckoutOptions), executor, path)
-	case CheckoutOptionsTypeGithub:
-		return this.checkoutGithub(checkoutOptions.(*GithubCheckoutOptions), executor, path)
-	case CheckoutOptionsTypeHg:
-		return this.checkoutHg(checkoutOptions.(*HgCheckoutOptions), executor, path)
-	case CheckoutOptionsTypeBitbucket:
-		return this.checkoutBitbucket(checkoutOptions.(*BitbucketCheckoutOptions), executor, path)
-	default:
-		return newInternalError(newValidationErrorUnknownCheckoutOptionsType(checkoutOptions.Type().String()))
-	}
+	return CheckoutOptionsSwitch(
+		checkoutOptions,
+		func(gitCheckoutOptions *GitCheckoutOptions) error {
+			return this.checkoutGit(checkoutOptions.(*GitCheckoutOptions), executor, path)
+		},
+		func(githubCheckoutOptions *GithubCheckoutOptions) error {
+			return this.checkoutGithub(checkoutOptions.(*GithubCheckoutOptions), executor, path)
+		},
+		func(hgCheckoutOptions *HgCheckoutOptions) error {
+			return this.checkoutHg(checkoutOptions.(*HgCheckoutOptions), executor, path)
+		},
+		func(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error {
+			return this.checkoutBitbucket(checkoutOptions.(*BitbucketCheckoutOptions), executor, path)
+		},
+	)
 }
 
 func (this *client) checkoutGit(gitCheckoutOptions *GitCheckoutOptions, executor exec.Executor, path string) (retErr error) {
@@ -191,65 +194,85 @@ func (this *client) tarAndDestroy(executorReadFileManager exec.ExecutorReadFileM
 }
 
 func (this *client) ignoreCheckoutFilePatterns(checkoutOptions CheckoutOptions) ([]string, error) {
-	switch checkoutOptions.Type() {
-	case CheckoutOptionsTypeGit:
-		return ignoreGitCheckoutFilePatterns, nil
-	case CheckoutOptionsTypeGithub:
-		return ignoreGitCheckoutFilePatterns, nil
-	case CheckoutOptionsTypeHg:
-		return ignoreHgCheckoutFilePatterns, nil
-	case CheckoutOptionsTypeBitbucket:
-		bitbucketCheckoutOptions := checkoutOptions.(*BitbucketCheckoutOptions)
-		switch bitbucketCheckoutOptions.BitbucketType {
-		case BitbucketTypeGit:
-			return ignoreGitCheckoutFilePatterns, nil
-		case BitbucketTypeHg:
-			return ignoreHgCheckoutFilePatterns, nil
-		default:
-			return nil, newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.Type().String()))
-		}
-	default:
-		return nil, newInternalError(newValidationErrorUnknownCheckoutOptionsType(checkoutOptions.Type().String()))
+	var ignoreCheckoutFilePatterns []string
+	if err := CheckoutOptionsSwitch(
+		checkoutOptions,
+		func(gitCheckoutOptions *GitCheckoutOptions) error {
+			ignoreCheckoutFilePatterns = ignoreGitCheckoutFilePatterns
+			return nil
+		},
+		func(githubCheckoutOptions *GithubCheckoutOptions) error {
+			ignoreCheckoutFilePatterns = ignoreGitCheckoutFilePatterns
+			return nil
+		},
+		func(hgCheckoutOptions *HgCheckoutOptions) error {
+			ignoreCheckoutFilePatterns = ignoreHgCheckoutFilePatterns
+			return nil
+		},
+		func(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error {
+			switch bitbucketCheckoutOptions.BitbucketType {
+			case BitbucketTypeGit:
+				ignoreCheckoutFilePatterns = ignoreGitCheckoutFilePatterns
+				return nil
+			case BitbucketTypeHg:
+				ignoreCheckoutFilePatterns = ignoreHgCheckoutFilePatterns
+				return nil
+			default:
+				return newInternalError(newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.Type().String()))
+			}
+		},
+	); err != nil {
+		return nil, err
 	}
+	return ignoreCheckoutFilePatterns, nil
 }
 
 func (this *client) getSshCommand(securityOptions SecurityOptions) (string, exec.Client, error) {
-	if securityOptions.Type() != SecurityOptionsTypeSsh {
-		return "", nil, nil
-	}
-	sshSecurityOptions := securityOptions.(*SshSecurityOptions)
-
-	sshCommand := []string{"ssh", "-o"}
-	if sshSecurityOptions.StrictHostKeyChecking {
-		sshCommand = append(sshCommand, "StrictHostKeyChecking=yes")
-	} else {
-		sshCommand = append(sshCommand, "StrictHostKeyChecking=no")
-	}
+	var sshCommand string
 	var client exec.Client
-	if sshSecurityOptions.PrivateKey != nil {
-		client, err := this.NewTempDirClient()
-		if err != nil {
-			return "", nil, err
-		}
-		writeFile, err := client.Create("id_rsa")
-		if err != nil {
-			return "", nil, err
-		}
-		data, err := ioutil.ReadAll(sshSecurityOptions.PrivateKey)
-		if err != nil {
-			return "", nil, err
-		}
-		_, err = writeFile.Write(data)
-		if err != nil {
-			return "", nil, err
-		}
-		err = writeFile.Chmod(0400)
-		if err != nil {
-			return "", nil, err
-		}
-		sshCommand = append(sshCommand, "-i", client.Join(client.DirPath(), "id_rsa"))
+	var err error
+	if err = SecurityOptionsSwitch(
+		securityOptions,
+		func(sshSecurityOptions *SshSecurityOptions) error {
+			sshCommandArgs := []string{"ssh", "-o"}
+			if sshSecurityOptions.StrictHostKeyChecking {
+				sshCommandArgs = append(sshCommandArgs, "StrictHostKeyChecking=yes")
+			} else {
+				sshCommandArgs = append(sshCommandArgs, "StrictHostKeyChecking=no")
+			}
+			if sshSecurityOptions.PrivateKey != nil {
+				client, err = this.NewTempDirClient()
+				if err != nil {
+					return err
+				}
+				writeFile, err := client.Create("id_rsa")
+				if err != nil {
+					return err
+				}
+				data, err := ioutil.ReadAll(sshSecurityOptions.PrivateKey)
+				if err != nil {
+					return err
+				}
+				_, err = writeFile.Write(data)
+				if err != nil {
+					return err
+				}
+				err = writeFile.Chmod(0400)
+				if err != nil {
+					return err
+				}
+				sshCommandArgs = append(sshCommandArgs, "-i", client.Join(client.DirPath(), "id_rsa"))
+				sshCommand = strings.Join(sshCommandArgs, " ")
+			}
+			return nil
+		},
+		func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error {
+			return nil
+		},
+	); err != nil {
+		return "", nil, err
 	}
-	return strings.Join(sshCommand, " "), client, nil
+	return sshCommand, client, nil
 }
 
 func getGitUrl(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
