@@ -138,11 +138,10 @@ func testBitbucketHg(t *testing.T, ignoreCheckoutFiles bool) {
 	clientProvider := getClientProvider(t)
 	client := NewClient(clientProvider, &ClientOptions{ignoreCheckoutFiles})
 	checkoutTarball, err := client.CheckoutTarball(
-		&BitbucketCheckoutOptions{
-			BitbucketType: BitbucketTypeHg,
-			User:          "durin42",
-			Repository:    "hg-git",
-			ChangesetId:   testHgGitChangesetId,
+		&BitbucketHgCheckoutOptions{
+			User:        "durin42",
+			Repository:  "hg-git",
+			ChangesetId: testHgGitChangesetId,
 			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
 		},
 	)

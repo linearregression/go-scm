@@ -36,14 +36,20 @@ type HgCheckoutOptions struct {
 	SecurityOptions SecurityOptions
 }
 
-// @gen-enumtype CheckoutOptions bitbucket 3
-type BitbucketCheckoutOptions struct {
-	BitbucketType   BitbucketType
+// @gen-enumtype CheckoutOptions bitbucketGit 3
+type BitbucketGitCheckoutOptions struct {
 	User            string
 	Repository      string
-	Branch          string // only set if BitbucketType == BitbucketTypeGit
-	CommitId        string // only set if BitbucketType == BitbucketTypeGit
-	ChangesetId     string // only set if BitbucketType == BitbucketTypeHg
+	Branch          string
+	CommitId        string
+	SecurityOptions SecurityOptions
+}
+
+// @gen-enumtype CheckoutOptions bitbucketHg 4
+type BitbucketHgCheckoutOptions struct {
+	User            string
+	Repository      string
+	ChangesetId     string
 	SecurityOptions SecurityOptions
 }
 

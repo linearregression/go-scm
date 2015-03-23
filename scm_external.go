@@ -14,7 +14,6 @@ type ExternalCheckoutOptions struct {
 	Repository      string                   `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Branch          string                   `json:"branch,omitempty" yaml:"branch,omitempty"`
 	CommitId        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
-	BitbucketType   string                   `json:"bitbucket_type,omitempty" yaml:"bitbucket_type,omitempty"`
 	ChangesetId     string                   `json:"changeset_id,omitempty" yaml:"changeset_id,omitempty"`
 	SecurityOptions *ExternalSecurityOptions `json:"security_options,omitempty" yaml:"security_options,omitempty"`
 }

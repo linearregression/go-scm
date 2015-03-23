@@ -12,7 +12,6 @@ var (
 	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
 	ValidationErrorTypeUnknownCheckoutOptionsType                   ValidationErrorType = "UnknownCheckoutOptionsType"
 	ValidationErrorTypeUnknownSecurityOptionsType                   ValidationErrorType = "UnknownSecurityOptionsType"
-	ValidationErrorTypeUnknownBitbucketType                         ValidationErrorType = "UnknownBitbucketType"
 )
 
 type ValidationErrorType string
@@ -59,10 +58,6 @@ func newValidationErrorUnknownCheckoutOptionsType(checkoutType string) Validatio
 
 func newValidationErrorUnknownSecurityOptionsType(securityType string) ValidationError {
 	return newValidationError(ValidationErrorTypeUnknownSecurityOptionsType, map[string]string{"securityType": securityType})
-}
-
-func newValidationErrorUnknownBitbucketType(bitbucketType string) ValidationError {
-	return newValidationError(ValidationErrorTypeUnknownBitbucketType, map[string]string{"bitbucketType": bitbucketType})
 }
 
 func newInternalError(validationError ValidationError) error {

@@ -61,17 +61,19 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				SecurityOptions: securityOptions,
 			}, nil
 		},
-		func() (*BitbucketCheckoutOptions, error) {
-			bitbucketType, err := BitbucketTypeOf(externalCheckoutOptions.BitbucketType)
-			if err != nil {
-				return nil, err
-			}
-			return &BitbucketCheckoutOptions{
-				BitbucketType:   bitbucketType,
+		func() (*BitbucketGitCheckoutOptions, error) {
+			return &BitbucketGitCheckoutOptions{
 				User:            externalCheckoutOptions.User,
 				Repository:      externalCheckoutOptions.Repository,
 				Branch:          externalCheckoutOptions.Branch,
 				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*BitbucketHgCheckoutOptions, error) {
+			return &BitbucketHgCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
 				ChangesetId:     externalCheckoutOptions.ChangesetId,
 				SecurityOptions: securityOptions,
 			}, nil

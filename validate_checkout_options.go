@@ -6,7 +6,8 @@ func validateCheckoutOptions(checkoutOptions CheckoutOptions) error {
 		validateGitCheckoutOptions,
 		validateGithubCheckoutOptions,
 		validateHgCheckoutOptions,
-		validateBitbucketCheckoutOptions,
+		validateBitbucketGitCheckoutOptions,
+		validateBitbucketHgCheckoutOptions,
 	)
 }
 
@@ -76,39 +77,39 @@ func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) error {
 	return nil
 }
 
-func validateBitbucketCheckoutOptions(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error {
-	if bitbucketCheckoutOptions.User == "" {
-		return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "User")
+func validateBitbucketGitCheckoutOptions(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) error {
+	if bitbucketGitCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "User")
 	}
-	if bitbucketCheckoutOptions.Repository == "" {
-		return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "Repository")
+	if bitbucketGitCheckoutOptions.Repository == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "Repository")
 	}
-	switch bitbucketCheckoutOptions.BitbucketType {
-	case BitbucketTypeGit:
-		if bitbucketCheckoutOptions.Branch == "" {
-			return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "Branch")
-		}
-		if bitbucketCheckoutOptions.CommitId == "" {
-			return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "CommitId")
-		}
-		if bitbucketCheckoutOptions.ChangesetId != "" {
-			return newValidationErrorFieldShouldNotBeSet("*BitbucketCheckoutOptions", "ChangesetId")
-		}
-	case BitbucketTypeHg:
-		if bitbucketCheckoutOptions.Branch != "" {
-			return newValidationErrorFieldShouldNotBeSet("*BitbucketCheckoutOptions", "Branch")
-		}
-		if bitbucketCheckoutOptions.CommitId != "" {
-			return newValidationErrorFieldShouldNotBeSet("*BitbucketCheckoutOptions", "CommitId")
-		}
-		if bitbucketCheckoutOptions.ChangesetId == "" {
-			return newValidationErrorRequiredFieldMissing("*BitbucketCheckoutOptions", "ChangesetId")
-		}
-	default:
-		return newValidationErrorUnknownBitbucketType(bitbucketCheckoutOptions.BitbucketType.String())
+	if bitbucketGitCheckoutOptions.Branch == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "Branch")
 	}
-	if bitbucketCheckoutOptions.SecurityOptions != nil {
-		if err := validateSecurityOptions(bitbucketCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucket, SecurityOptionsTypeSsh); err != nil {
+	if bitbucketGitCheckoutOptions.CommitId == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "CommitId")
+	}
+	if bitbucketGitCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(bitbucketGitCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucketGit, SecurityOptionsTypeSsh); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateBitbucketHgCheckoutOptions(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error {
+	if bitbucketHgCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketHgCheckoutOptions", "User")
+	}
+	if bitbucketHgCheckoutOptions.Repository == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketHgCheckoutOptions", "Repository")
+	}
+	if bitbucketHgCheckoutOptions.ChangesetId == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketHgCheckoutOptions", "ChangesetId")
+	}
+	if bitbucketHgCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(bitbucketHgCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucketHg, SecurityOptionsTypeSsh); err != nil {
 			return nil
 		}
 	}
@@ -127,9 +128,6 @@ func validateSecurityOptions(securityOptions SecurityOptions, checkoutType Check
 }
 
 func validateSshSecurityOptions(sshSecurityOptions *SshSecurityOptions) error {
-	//if sshSecurityOptions.PrivateKey == nil {
-	//return newValidationErrorRequiredFieldMissing("SshSecurityOptions", "PrivateKey")
-	//}
 	return nil
 }
 
