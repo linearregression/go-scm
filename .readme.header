@@ -21,20 +21,12 @@ To run:
 
 ```bash
 make install
-cat cmd/go-scm/_testdata/external_checkout_options.json | go-scm
+cat cmd/_testdata/external_checkout_options.json | scm-clone
 ```
 
 To run with Docker:
 
 ```bash
 make container
-cat cmd/go-scm/_testdata/external_checkout_options.json | docker run -i pedge/goscm
+cat cmd/_testdata/external_checkout_options.json | docker run -i pedge/goscmclone
 ```
-
-To run with Docker using etcd:
-
-```bash
-make container
-docker run pedge/goscm --etcd_url=http://host:port --etcd_input_key=key_for_json_external_checkout_options --etcd_output_key=key_for_path_within_docker_volume_of_result
-```
-

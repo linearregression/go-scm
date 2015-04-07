@@ -18,5 +18,5 @@ RUN \
 VOLUME ["/goscm"]
 
 RUN mkdir -p /app
-ADD tmp/linux/go-scm /app/
-ENTRYPOINT ["/app/go-scm", "--base_dir_path=/goscm"]
+ADD tmp/linux/scm-checkout /app/
+ENTRYPOINT ["/app/scm-checkout", "--base_dir_path=/goscm"]

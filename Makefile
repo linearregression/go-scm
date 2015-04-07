@@ -1,7 +1,7 @@
 .PHONY: \
 	all \
 	precommit \
-	check_for_codeship \
+	check_for_jet \
 	deps \
 	updatedeps \
 	testdeps \
@@ -10,14 +10,15 @@
 	build \
 	install \
 	test \
-	codeshipsteps \
+	jetsteps \
 	cov \
 	testcontainer \
 	buildcontainer \
+	clonecontainer \
+	tarballcontainer \
 	linuxcompile \
 	darwincompile \
 	xccompile \
-	container \
 	linuxdockercompile \
 	darwindockercompile \
 	doc \
@@ -28,18 +29,21 @@ all: test install
 
 precommit: xc
 
-check_for_codeship:
-	@ if ! which codeship > /dev/null; then \
-			echo "error: codeship not installed" >&2; \
+check_for_jet:
+	@ if ! which jet > /dev/null; then \
+			echo "error: jet not installed" >&2; \
+			exit 1; \
 	  fi
 
 deps:
 	go get -d -v ./...
 	go get github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
+	go get github.com/peter-edge/go-record/cmd/gen-record
 
 updatedeps:
 	go get -d -v -u -f ./...
 	go get github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
+	go get github.com/peter-edge/go-record/cmd/gen-record
 
 testdeps: deps
 	go get -d -v -t ./...
@@ -60,8 +64,8 @@ install: deps generate
 test: testdeps generate
 	go test -test.v ./...
 
-codeshipsteps: check_for_codeship generate
-	codeship steps
+jetsteps: check_for_jet generate
+	jet steps
 
 cov: testdeps generate
 	go get -v github.com/axw/gocov/gocov
@@ -73,6 +77,12 @@ buildcontainer: testdeps generate
 testcontainer: testdeps generate
 	docker build --file=Dockerfile.test -t pedge/goscmtest .
 
+clonecontainer: linuxcompile
+	docker build --file=Dockerfile.clone -t pedge/goscmclone .
+
+tarballcontainer: linuxcompile
+	docker build --file=Dockerfile.tarball -t pedge/goscmtarball .
+
 linuxcompile: deps generate
 	bash makebin/compile.sh linux
 
@@ -80,9 +90,6 @@ darwincompile: deps generate
 	bash makebin/compile.sh darwin
 
 xccompile: linuxcompile darwincompile
-
-container: linuxcompile
-	docker build --file=Dockerfile.goscm -t pedge/goscm .
 
 linuxdockercompile: buildcontainer
 	bash makebin/docker_compile.sh linux
