@@ -21,26 +21,27 @@ To run:
 
 ```bash
 make install
-cat cmd/go-scm/_testdata/external_checkout_options.json | go-scm
+cat cmd/_testdata/external_checkout_options.json | scm-clone
 ```
 
 To run with Docker:
 
 ```bash
 make container
-cat cmd/go-scm/_testdata/external_checkout_options.json | docker run -i pedge/goscm
+cat cmd/_testdata/external_checkout_options.json | docker run -i pedge/goscmclone
 ```
-
-To run with Docker using etcd:
-
-```bash
-make container
-docker run pedge/goscm --etcd_url=http://host:port --etcd_input_key=key_for_json_external_checkout_options --etcd_output_key=key_for_path_within_docker_volume_of_result
-```
-
 Git SSH requires Git 2.3.0.
 
 ## Usage
+
+```go
+var (
+	AllRecordConverters = []record.RecordConverter{
+		&CloneRecordRecordConverter{},
+		&TarballRecordRecordConverter{},
+	}
+)
+```
 
 #### func  AllCheckoutOptionsTypes
 
@@ -54,6 +55,17 @@ func AllCheckoutOptionsTypes() []CheckoutOptionsType
 func AllSecurityOptionsTypes() []SecurityOptionsType
 ```
 
+#### func  Checkout
+
+```go
+func Checkout(
+	execClientProvider exec.ClientProvider,
+	checkoutOptions CheckoutOptions,
+	executor exec.Executor,
+	path string,
+) error
+```
+
 #### func  CheckoutOptionsSwitch
 
 ```go
@@ -62,8 +74,19 @@ func CheckoutOptionsSwitch(
 	gitCheckoutOptionsFunc func(gitCheckoutOptions *GitCheckoutOptions) error,
 	githubCheckoutOptionsFunc func(githubCheckoutOptions *GithubCheckoutOptions) error,
 	hgCheckoutOptionsFunc func(hgCheckoutOptions *HgCheckoutOptions) error,
-	bitbucketCheckoutOptionsFunc func(bitbucketCheckoutOptions *BitbucketCheckoutOptions) error,
+	bitbucketGitCheckoutOptionsFunc func(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) error,
+	bitbucketHgCheckoutOptionsFunc func(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error,
 ) error
+```
+
+#### func  CheckoutTarball
+
+```go
+func CheckoutTarball(
+	execClientProvider exec.ClientProvider,
+	checkoutOptions CheckoutOptions,
+	ignoreCheckoutFiles bool,
+) (io.Reader, error)
 ```
 
 #### func  SecurityOptionsSwitch
@@ -74,12 +97,6 @@ func SecurityOptionsSwitch(
 	sshSecurityOptionsFunc func(sshSecurityOptions *SshSecurityOptions) error,
 	accessTokenSecurityOptionsFunc func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error,
 ) error
-```
-
-#### func  UnknownBitbucketType
-
-```go
-func UnknownBitbucketType(unknownBitbucketType interface{}) error
 ```
 
 #### type AccessTokenSecurityOptions
@@ -104,58 +121,55 @@ func (this *AccessTokenSecurityOptions) String() string
 func (this *AccessTokenSecurityOptions) Type() SecurityOptionsType
 ```
 
-#### type BitbucketCheckoutOptions
+#### type BitbucketGitCheckoutOptions
 
 ```go
-type BitbucketCheckoutOptions struct {
-	BitbucketType   BitbucketType
+type BitbucketGitCheckoutOptions struct {
 	User            string
 	Repository      string
-	Branch          string // only set if BitbucketType == BitbucketTypeGit
-	CommitId        string // only set if BitbucketType == BitbucketTypeGit
-	ChangesetId     string // only set if BitbucketType == BitbucketTypeHg
+	Branch          string
+	CommitId        string
 	SecurityOptions SecurityOptions
 }
 ```
 
-@gen-enumtype CheckoutOptions bitbucket 3
+@gen-enumtype CheckoutOptions bitbucketGit 3
 
-#### func (*BitbucketCheckoutOptions) String
+#### func (*BitbucketGitCheckoutOptions) String
 
 ```go
-func (this *BitbucketCheckoutOptions) String() string
+func (this *BitbucketGitCheckoutOptions) String() string
 ```
 
-#### func (*BitbucketCheckoutOptions) Type
+#### func (*BitbucketGitCheckoutOptions) Type
 
 ```go
-func (this *BitbucketCheckoutOptions) Type() CheckoutOptionsType
+func (this *BitbucketGitCheckoutOptions) Type() CheckoutOptionsType
 ```
 
-#### type BitbucketType
+#### type BitbucketHgCheckoutOptions
 
 ```go
-type BitbucketType uint
+type BitbucketHgCheckoutOptions struct {
+	User            string
+	Repository      string
+	ChangesetId     string
+	SecurityOptions SecurityOptions
+}
 ```
 
+@gen-enumtype CheckoutOptions bitbucketHg 4
+
+#### func (*BitbucketHgCheckoutOptions) String
 
 ```go
-var (
-	BitbucketTypeGit BitbucketType = 0
-	BitbucketTypeHg  BitbucketType = 1
-)
+func (this *BitbucketHgCheckoutOptions) String() string
 ```
 
-#### func  BitbucketTypeOf
+#### func (*BitbucketHgCheckoutOptions) Type
 
 ```go
-func BitbucketTypeOf(s string) (BitbucketType, error)
-```
-
-#### func (BitbucketType) String
-
-```go
-func (this BitbucketType) String() string
+func (this *BitbucketHgCheckoutOptions) Type() CheckoutOptionsType
 ```
 
 #### type CheckoutOptions
@@ -182,7 +196,11 @@ type CheckoutOptionsType uint
 
 
 ```go
-var CheckoutOptionsTypeBitbucket CheckoutOptionsType = 3
+var CheckoutOptionsTypeBitbucketGit CheckoutOptionsType = 3
+```
+
+```go
+var CheckoutOptionsTypeBitbucketHg CheckoutOptionsType = 4
 ```
 
 ```go
@@ -210,7 +228,8 @@ func (this CheckoutOptionsType) Handle(
 	checkoutOptionsTypeGitFunc func() error,
 	checkoutOptionsTypeGithubFunc func() error,
 	checkoutOptionsTypeHgFunc func() error,
-	checkoutOptionsTypeBitbucketFunc func() error,
+	checkoutOptionsTypeBitbucketGitFunc func() error,
+	checkoutOptionsTypeBitbucketHgFunc func() error,
 ) error
 ```
 
@@ -221,7 +240,8 @@ func (this CheckoutOptionsType) NewCheckoutOptions(
 	gitCheckoutOptionsFunc func() (*GitCheckoutOptions, error),
 	githubCheckoutOptionsFunc func() (*GithubCheckoutOptions, error),
 	hgCheckoutOptionsFunc func() (*HgCheckoutOptions, error),
-	bitbucketCheckoutOptionsFunc func() (*BitbucketCheckoutOptions, error),
+	bitbucketGitCheckoutOptionsFunc func() (*BitbucketGitCheckoutOptions, error),
+	bitbucketHgCheckoutOptionsFunc func() (*BitbucketHgCheckoutOptions, error),
 ) (CheckoutOptions, error)
 ```
 
@@ -232,7 +252,8 @@ func (this CheckoutOptionsType) Produce(
 	checkoutOptionsTypeGitFunc func() (interface{}, error),
 	checkoutOptionsTypeGithubFunc func() (interface{}, error),
 	checkoutOptionsTypeHgFunc func() (interface{}, error),
-	checkoutOptionsTypeBitbucketFunc func() (interface{}, error),
+	checkoutOptionsTypeBitbucketGitFunc func() (interface{}, error),
+	checkoutOptionsTypeBitbucketHgFunc func() (interface{}, error),
 ) (interface{}, error)
 ```
 
@@ -242,43 +263,45 @@ func (this CheckoutOptionsType) Produce(
 func (this CheckoutOptionsType) String() string
 ```
 
-#### type Client
+#### type CloneRecord
 
 ```go
-type Client interface {
-	CheckoutTarball(checkoutOptions CheckoutOptions) (io.Reader, error)
+type CloneRecord struct {
+	Path string
 }
 ```
 
+@gen-record
 
-#### func  NewClient
+#### func (*CloneRecord) ReadableName
 
 ```go
-func NewClient(execClientProvider exec.ClientProvider, clientOptions *ClientOptions) Client
+func (this *CloneRecord) ReadableName() string
 ```
 
-#### type ClientOptions
+#### type CloneRecordRecordConverter
 
 ```go
-type ClientOptions struct {
-	IgnoreCheckoutFiles bool
-}
-```
-
-
-#### type DirectClient
-
-```go
-type DirectClient interface {
-	Checkout(checkoutOptions CheckoutOptions, executor exec.Executor, path string) error
-}
+type CloneRecordRecordConverter struct{}
 ```
 
 
-#### func  NewDirectClient
+#### func (*CloneRecordRecordConverter) FromMap
 
 ```go
-func NewDirectClient(execClientProvider exec.ClientProvider) DirectClient
+func (this *CloneRecordRecordConverter) FromMap(m map[string]string) (record.RecordObject, error)
+```
+
+#### func (*CloneRecordRecordConverter) ToMap
+
+```go
+func (this *CloneRecordRecordConverter) ToMap(object record.RecordObject) (map[string]string, error)
+```
+
+#### func (*CloneRecordRecordConverter) Type
+
+```go
+func (this *CloneRecordRecordConverter) Type() reflect.Type
 ```
 
 #### type ExternalCheckoutOptions
@@ -292,42 +315,11 @@ type ExternalCheckoutOptions struct {
 	Repository      string                   `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Branch          string                   `json:"branch,omitempty" yaml:"branch,omitempty"`
 	CommitId        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
-	BitbucketType   string                   `json:"bitbucket_type,omitempty" yaml:"bitbucket_type,omitempty"`
 	ChangesetId     string                   `json:"changeset_id,omitempty" yaml:"changeset_id,omitempty"`
 	SecurityOptions *ExternalSecurityOptions `json:"security_options,omitempty" yaml:"security_options,omitempty"`
 }
 ```
 
-
-#### type ExternalClient
-
-```go
-type ExternalClient interface {
-	CheckoutTarball(externalCheckoutOptions *ExternalCheckoutOptions) (io.Reader, error)
-}
-```
-
-
-#### func  NewExternalClient
-
-```go
-func NewExternalClient(client Client) ExternalClient
-```
-
-#### type ExternalDirectClient
-
-```go
-type ExternalDirectClient interface {
-	Checkout(externalCheckoutOptions *ExternalCheckoutOptions, executor exec.Executor, path string) error
-}
-```
-
-
-#### func  NewExternalDirectClient
-
-```go
-func NewExternalDirectClient(directClient DirectClient) ExternalDirectClient
-```
 
 #### type ExternalSecurityOptions
 
@@ -507,6 +499,47 @@ func (this *SshSecurityOptions) String() string
 func (this *SshSecurityOptions) Type() SecurityOptionsType
 ```
 
+#### type TarballRecord
+
+```go
+type TarballRecord struct {
+	Path string
+}
+```
+
+@gen-record
+
+#### func (*TarballRecord) ReadableName
+
+```go
+func (this *TarballRecord) ReadableName() string
+```
+
+#### type TarballRecordRecordConverter
+
+```go
+type TarballRecordRecordConverter struct{}
+```
+
+
+#### func (*TarballRecordRecordConverter) FromMap
+
+```go
+func (this *TarballRecordRecordConverter) FromMap(m map[string]string) (record.RecordObject, error)
+```
+
+#### func (*TarballRecordRecordConverter) ToMap
+
+```go
+func (this *TarballRecordRecordConverter) ToMap(object record.RecordObject) (map[string]string, error)
+```
+
+#### func (*TarballRecordRecordConverter) Type
+
+```go
+func (this *TarballRecordRecordConverter) Type() reflect.Type
+```
+
 #### type ValidationError
 
 ```go
@@ -529,8 +562,5 @@ var (
 	ValidationErrorTypeRequiredFieldMissing                         ValidationErrorType = "RequiredFieldMissing"
 	ValidationErrorTypeFieldShouldNotBeSet                          ValidationErrorType = "FieldShouldNotBeSet"
 	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
-	ValidationErrorTypeUnknownCheckoutOptionsType                   ValidationErrorType = "UnknownCheckoutOptionsType"
-	ValidationErrorTypeUnknownSecurityOptionsType                   ValidationErrorType = "UnknownSecurityOptionsType"
-	ValidationErrorTypeUnknownBitbucketType                         ValidationErrorType = "UnknownBitbucketType"
 )
 ```
