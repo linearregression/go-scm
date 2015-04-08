@@ -89,6 +89,12 @@ func CheckoutTarball(
 ) (io.Reader, error)
 ```
 
+#### func  NewRecordConverterHandler
+
+```go
+func NewRecordConverterHandler() (record.RecordConverterHandler, error)
+```
+
 #### func  SecurityOptionsSwitch
 
 ```go

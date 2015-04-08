@@ -58,24 +58,12 @@ func main() {
 	if hostBaseDirPath != "" {
 		path = strings.NewReplacer(baseDirPath, hostBaseDirPath).Replace(path)
 	}
-	recordConverterRegistry, err := record.NewRecordConverterRegistry(
-		&record.RecordConverterReservedKeys{
-			Id:           "ID_",
-			Type:         "TYPE",
-			TimeUnixNsec: "TIME_UNIX_NSEC",
-			Category:     "CATEGORY",
-			RecordLevel:  "RECORD_LEVEL",
-			WriterOutput: "WRITER_OUTPUT",
-		},
-	)
+	recordConverterHandler, err := scm.NewRecordConverterHandler()
 	checkError(err)
-	for _, recordConverter := range scm.AllRecordConverters {
-		checkError(recordConverterRegistry.Register(recordConverter))
-	}
 	record.NewWriterMapMarshallerRecorder(
 		os.Stdout,
 		record.NewJSONMapMarshaller(),
-		recordConverterRegistry.Handler(),
+		recordConverterHandler,
 		record.SystemTimer,
 		record.RecordLevelInfo,
 		nil,

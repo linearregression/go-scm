@@ -31,7 +31,6 @@ var (
 )
 
 //go:generate gen-enumtype
-//go:generate gen-record
 
 // @gen-enumtype CheckoutOptions git 0
 type GitCheckoutOptions struct {
@@ -87,16 +86,6 @@ type SshSecurityOptions struct {
 // @gen-enumtype SecurityOptions accessToken 1
 type AccessTokenSecurityOptions struct {
 	AccessToken string
-}
-
-// @gen-record
-type CloneRecord struct {
-	Path string
-}
-
-// @gen-record
-type TarballRecord struct {
-	Path string
 }
 
 func Checkout(
