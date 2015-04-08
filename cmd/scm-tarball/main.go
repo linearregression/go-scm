@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,24 +16,27 @@ import (
 )
 
 func main() {
+	var input string
 	var baseDirPath string
 	var hostBaseDirPath string
 	var tarballName string
 	var ignoreCheckoutFiles bool
+	flag.StringVar(&input, "input", "", "The JSON ExternalCheckoutOptions")
 	flag.StringVar(&baseDirPath, "base_dir_path", "", "The directory to clone into (defaults to a temporary directory)")
 	flag.StringVar(&hostBaseDirPath, "host_base_dir_path", "", "The equivalent directory within the host if base_dir_path is a linked volume (base_dir_path must be set)")
 	flag.StringVar(&tarballName, "tarball_name", "", "The name of the tarball to output (no tarball by default)")
 	flag.BoolVar(&ignoreCheckoutFiles, "ignore_checkout_files", false, "Ignore checkout files if tarballing (false by default)")
 	flag.Parse()
+	if input == "" {
+		checkError(errors.New("must pass JSON ExternalCheckoutOptions as --input"))
+	}
 	checkTrue(tarballName != "", "--tarball_name must be set")
 	if hostBaseDirPath != "" {
 		checkTrue(baseDirPath != "", "--base_dir_path must be set if --host_base_dir_path is set")
 	}
 
-	data, err := ioutil.ReadAll(os.Stdin)
-	checkError(err)
 	var externalCheckoutOptions scm.ExternalCheckoutOptions
-	checkError(json.Unmarshal(data, &externalCheckoutOptions))
+	checkError(json.Unmarshal([]byte(input), &externalCheckoutOptions))
 	checkoutOptions, err := scm.ConvertExternalCheckoutOptions(&externalCheckoutOptions)
 	checkError(err)
 

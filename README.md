@@ -14,22 +14,6 @@ import (
     "github.com/peter-edge/go-scm"
 )
 ```
-
-## Notes
-
-To run:
-
-```bash
-make install
-cat cmd/_testdata/external_checkout_options.json | scm-clone
-```
-
-To run with Docker:
-
-```bash
-make container
-cat cmd/_testdata/external_checkout_options.json | docker run -i pedge/goscmclone
-```
 Git SSH requires Git 2.3.0.
 
 ## Usage

@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,13 +15,18 @@ import (
 )
 
 func main() {
+	var input string
 	var baseDirPath string
 	var hostBaseDirPath string
 	var clonePath string
+	flag.StringVar(&input, "input", "", "The JSON ExternalCheckoutOptions")
 	flag.StringVar(&baseDirPath, "base_dir_path", "", "The directory to clone into (defaults to a temporary directory)")
 	flag.StringVar(&hostBaseDirPath, "host_base_dir_path", "", "The equivalent directory within the host if base_dir_path is a linked volume (base_dir_path must be set)")
 	flag.StringVar(&clonePath, "clone_path", "", "The name of the clone directory (defaults to clone)")
 	flag.Parse()
+	if input == "" {
+		checkError(errors.New("must pass JSON ExternalCheckoutOptions as --input"))
+	}
 	if hostBaseDirPath != "" {
 		checkTrue(baseDirPath != "", "--base_dir_path must be set if --host_base_dir_path is set")
 	}
@@ -29,10 +34,8 @@ func main() {
 		clonePath = "clone"
 	}
 
-	data, err := ioutil.ReadAll(os.Stdin)
-	checkError(err)
 	var externalCheckoutOptions scm.ExternalCheckoutOptions
-	checkError(json.Unmarshal(data, &externalCheckoutOptions))
+	checkError(json.Unmarshal([]byte(input), &externalCheckoutOptions))
 	checkoutOptions, err := scm.ConvertExternalCheckoutOptions(&externalCheckoutOptions)
 	checkError(err)
 
