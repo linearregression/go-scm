@@ -63,9 +63,9 @@ func main() {
 	}
 	recordConverterHandler, err := scm.NewRecordConverterHandler()
 	checkError(err)
-	record.NewWriterMapMarshallerRecorder(
+	record.NewWriterMapEncoderRecorder(
 		os.Stdout,
-		record.NewJSONMapMarshaller(),
+		record.NewProtoMapEncoder(),
 		recordConverterHandler,
 		record.SystemTimer,
 		record.RecordLevelInfo,

@@ -25,23 +25,23 @@ func (this *CloneRecordRecordConverter) Type() reflect.Type {
 	return reflect.TypeOf(&CloneRecord{})
 }
 
-func (this *CloneRecordRecordConverter) ToMap(object record.RecordObject) (map[string]string, error) {
+func (this *CloneRecordRecordConverter) ToMap(object record.RecordObject) (map[string][]byte, error) {
 	value, ok := object.(*CloneRecord)
 	if !ok {
 		return nil, record.ErrCannotCast
 	}
-	return map[string]string{
-		"PATH": value.Path,
+	return map[string][]byte{
+		"PATH": []byte(value.Path),
 	}, nil
 }
 
-func (this *CloneRecordRecordConverter) FromMap(m map[string]string) (record.RecordObject, error) {
+func (this *CloneRecordRecordConverter) FromMap(m map[string][]byte) (record.RecordObject, error) {
 	path, ok := m["PATH"]
 	if !ok {
 		return nil, record.ErrNoValueForKey
 	}
 	return &CloneRecord{
-		Path: path,
+		Path: string(path),
 	}, nil
 }
 
@@ -55,23 +55,23 @@ func (this *TarballRecordRecordConverter) Type() reflect.Type {
 	return reflect.TypeOf(&TarballRecord{})
 }
 
-func (this *TarballRecordRecordConverter) ToMap(object record.RecordObject) (map[string]string, error) {
+func (this *TarballRecordRecordConverter) ToMap(object record.RecordObject) (map[string][]byte, error) {
 	value, ok := object.(*TarballRecord)
 	if !ok {
 		return nil, record.ErrCannotCast
 	}
-	return map[string]string{
-		"PATH": value.Path,
+	return map[string][]byte{
+		"PATH": []byte(value.Path),
 	}, nil
 }
 
-func (this *TarballRecordRecordConverter) FromMap(m map[string]string) (record.RecordObject, error) {
+func (this *TarballRecordRecordConverter) FromMap(m map[string][]byte) (record.RecordObject, error) {
 	path, ok := m["PATH"]
 	if !ok {
 		return nil, record.ErrNoValueForKey
 	}
 	return &TarballRecord{
-		Path: path,
+		Path: string(path),
 	}, nil
 }
 
