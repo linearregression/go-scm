@@ -18,5 +18,5 @@ RUN \
 VOLUME ["/goscm"]
 
 RUN mkdir -p /app
-ADD tmp/linux/scm-clone /app/
+ADD downloads/linux_amd64/scm-clone /app/
 ENTRYPOINT ["/app/scm-clone", "--base_dir_path=/goscm"]

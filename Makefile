@@ -77,12 +77,6 @@ buildcontainer: testdeps generate
 testcontainer: testdeps generate
 	docker build --file=Dockerfile.test -t pedge/goscmtest .
 
-clonecontainer: linuxcompile
-	docker build --file=Dockerfile.clone -t pedge/goscmclone .
-
-tarballcontainer: linuxcompile
-	docker build --file=Dockerfile.tarball -t pedge/goscmtarball .
-
 linuxcompile: deps generate
 	bash makebin/compile.sh linux
 
@@ -96,6 +90,12 @@ linuxdockercompile: buildcontainer
 
 darwindockercompile: buildcontainer
 	bash makebin/docker_compile.sh darwin
+
+clonecontainer: linuxdockercompile
+	docker build --file=Dockerfile.clone -t pedge/goscmclone .
+
+tarballcontainer: linuxdockercompile
+	docker build --file=Dockerfile.tarball -t pedge/goscmtarball .
 
 doc:
 	go get -v github.com/robertkrimen/godocdown/godocdown

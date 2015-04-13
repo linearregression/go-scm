@@ -8,124 +8,6 @@ import (
 	"github.com/peter-edge/go-stringhelper"
 )
 
-type SecurityOptionsType uint
-
-var SecurityOptionsTypeSsh SecurityOptionsType = 0
-var SecurityOptionsTypeAccessToken SecurityOptionsType = 1
-
-var securityOptionsTypeToString = map[SecurityOptionsType]string{
-	SecurityOptionsTypeSsh: "ssh",
-	SecurityOptionsTypeAccessToken: "accessToken",
-}
-
-var stringToSecurityOptionsType = map[string]SecurityOptionsType{
-	"ssh": SecurityOptionsTypeSsh,
-	"accessToken": SecurityOptionsTypeAccessToken,
-}
-
-func AllSecurityOptionsTypes() []SecurityOptionsType {
-	return []SecurityOptionsType{
-		SecurityOptionsTypeSsh,
-		SecurityOptionsTypeAccessToken,
-	}
-}
-
-func SecurityOptionsTypeOf(s string) (SecurityOptionsType, error) {
-	securityOptionsType, ok := stringToSecurityOptionsType[s]
-	if !ok {
-		return 0, newErrorUnknownSecurityOptionsType(s)
-	}
-	return securityOptionsType, nil
-}
-
-func (this SecurityOptionsType) String() string {
-	if int(this) < len(securityOptionsTypeToString) {
-		 return securityOptionsTypeToString[this]
-	}
-	panic(newErrorUnknownSecurityOptionsType(this).Error())
-}
-
-type SecurityOptions interface {
-	fmt.Stringer
-	Type() SecurityOptionsType
-}
-
-func (this *SshSecurityOptions) Type() SecurityOptionsType {
-	return SecurityOptionsTypeSsh
-}
-
-func (this *AccessTokenSecurityOptions) Type() SecurityOptionsType {
-	return SecurityOptionsTypeAccessToken
-}
-
-func (this *SshSecurityOptions) String() string {
-	return stringhelper.String(this)
-}
-
-func (this *AccessTokenSecurityOptions) String() string {
-	return stringhelper.String(this)
-}
-
-func SecurityOptionsSwitch(
-	securityOptions SecurityOptions,
-	sshSecurityOptionsFunc func(sshSecurityOptions *SshSecurityOptions) error,
-	accessTokenSecurityOptionsFunc func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error,
-) error {
-	switch securityOptions.Type() {
-	case SecurityOptionsTypeSsh:
-		return sshSecurityOptionsFunc(securityOptions.(*SshSecurityOptions))
-	case SecurityOptionsTypeAccessToken:
-		return accessTokenSecurityOptionsFunc(securityOptions.(*AccessTokenSecurityOptions))
-	default:
-		return newErrorUnknownSecurityOptionsType(securityOptions.Type())
-	}
-}
-
-func (this SecurityOptionsType) NewSecurityOptions(
-	sshSecurityOptionsFunc func() (*SshSecurityOptions, error),
-	accessTokenSecurityOptionsFunc func() (*AccessTokenSecurityOptions, error),
-) (SecurityOptions, error) {
-	switch this {
-	case SecurityOptionsTypeSsh:
-		return sshSecurityOptionsFunc()
-	case SecurityOptionsTypeAccessToken:
-		return accessTokenSecurityOptionsFunc()
-	default:
-		return nil, newErrorUnknownSecurityOptionsType(this)
-	}
-}
-
-func (this SecurityOptionsType) Produce(
-	securityOptionsTypeSshFunc func() (interface{}, error),
-	securityOptionsTypeAccessTokenFunc func() (interface{}, error),
-) (interface{}, error) {
-	switch this {
-	case SecurityOptionsTypeSsh:
-		return securityOptionsTypeSshFunc()
-	case SecurityOptionsTypeAccessToken:
-		return securityOptionsTypeAccessTokenFunc()
-	default:
-		return nil, newErrorUnknownSecurityOptionsType(this)
-	}
-}
-
-func (this SecurityOptionsType) Handle(
-	securityOptionsTypeSshFunc func() error,
-	securityOptionsTypeAccessTokenFunc func() error,
-) error {
-	switch this {
-	case SecurityOptionsTypeSsh:
-		return securityOptionsTypeSshFunc()
-	case SecurityOptionsTypeAccessToken:
-		return securityOptionsTypeAccessTokenFunc()
-	default:
-		return newErrorUnknownSecurityOptionsType(this)
-	}
-}
-
-func newErrorUnknownSecurityOptionsType(value interface{}) error {
-	return fmt.Errorf("scm: UnknownSecurityOptionsType: %v", value)
-}
 type CheckoutOptionsType uint
 
 var CheckoutOptionsTypeGit CheckoutOptionsType = 0
@@ -315,4 +197,122 @@ func (this CheckoutOptionsType) Handle(
 
 func newErrorUnknownCheckoutOptionsType(value interface{}) error {
 	return fmt.Errorf("scm: UnknownCheckoutOptionsType: %v", value)
+}
+type SecurityOptionsType uint
+
+var SecurityOptionsTypeSsh SecurityOptionsType = 0
+var SecurityOptionsTypeAccessToken SecurityOptionsType = 1
+
+var securityOptionsTypeToString = map[SecurityOptionsType]string{
+	SecurityOptionsTypeSsh: "ssh",
+	SecurityOptionsTypeAccessToken: "accessToken",
+}
+
+var stringToSecurityOptionsType = map[string]SecurityOptionsType{
+	"ssh": SecurityOptionsTypeSsh,
+	"accessToken": SecurityOptionsTypeAccessToken,
+}
+
+func AllSecurityOptionsTypes() []SecurityOptionsType {
+	return []SecurityOptionsType{
+		SecurityOptionsTypeSsh,
+		SecurityOptionsTypeAccessToken,
+	}
+}
+
+func SecurityOptionsTypeOf(s string) (SecurityOptionsType, error) {
+	securityOptionsType, ok := stringToSecurityOptionsType[s]
+	if !ok {
+		return 0, newErrorUnknownSecurityOptionsType(s)
+	}
+	return securityOptionsType, nil
+}
+
+func (this SecurityOptionsType) String() string {
+	if int(this) < len(securityOptionsTypeToString) {
+		 return securityOptionsTypeToString[this]
+	}
+	panic(newErrorUnknownSecurityOptionsType(this).Error())
+}
+
+type SecurityOptions interface {
+	fmt.Stringer
+	Type() SecurityOptionsType
+}
+
+func (this *SshSecurityOptions) Type() SecurityOptionsType {
+	return SecurityOptionsTypeSsh
+}
+
+func (this *AccessTokenSecurityOptions) Type() SecurityOptionsType {
+	return SecurityOptionsTypeAccessToken
+}
+
+func (this *SshSecurityOptions) String() string {
+	return stringhelper.String(this)
+}
+
+func (this *AccessTokenSecurityOptions) String() string {
+	return stringhelper.String(this)
+}
+
+func SecurityOptionsSwitch(
+	securityOptions SecurityOptions,
+	sshSecurityOptionsFunc func(sshSecurityOptions *SshSecurityOptions) error,
+	accessTokenSecurityOptionsFunc func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error,
+) error {
+	switch securityOptions.Type() {
+	case SecurityOptionsTypeSsh:
+		return sshSecurityOptionsFunc(securityOptions.(*SshSecurityOptions))
+	case SecurityOptionsTypeAccessToken:
+		return accessTokenSecurityOptionsFunc(securityOptions.(*AccessTokenSecurityOptions))
+	default:
+		return newErrorUnknownSecurityOptionsType(securityOptions.Type())
+	}
+}
+
+func (this SecurityOptionsType) NewSecurityOptions(
+	sshSecurityOptionsFunc func() (*SshSecurityOptions, error),
+	accessTokenSecurityOptionsFunc func() (*AccessTokenSecurityOptions, error),
+) (SecurityOptions, error) {
+	switch this {
+	case SecurityOptionsTypeSsh:
+		return sshSecurityOptionsFunc()
+	case SecurityOptionsTypeAccessToken:
+		return accessTokenSecurityOptionsFunc()
+	default:
+		return nil, newErrorUnknownSecurityOptionsType(this)
+	}
+}
+
+func (this SecurityOptionsType) Produce(
+	securityOptionsTypeSshFunc func() (interface{}, error),
+	securityOptionsTypeAccessTokenFunc func() (interface{}, error),
+) (interface{}, error) {
+	switch this {
+	case SecurityOptionsTypeSsh:
+		return securityOptionsTypeSshFunc()
+	case SecurityOptionsTypeAccessToken:
+		return securityOptionsTypeAccessTokenFunc()
+	default:
+		return nil, newErrorUnknownSecurityOptionsType(this)
+	}
+}
+
+func (this SecurityOptionsType) Handle(
+	securityOptionsTypeSshFunc func() error,
+	securityOptionsTypeAccessTokenFunc func() error,
+) error {
+	switch this {
+	case SecurityOptionsTypeSsh:
+		return securityOptionsTypeSshFunc()
+	case SecurityOptionsTypeAccessToken:
+		return securityOptionsTypeAccessTokenFunc()
+	default:
+		return newErrorUnknownSecurityOptionsType(this)
+	}
+}
+
+func newErrorUnknownSecurityOptionsType(value interface{}) error {
+	return fmt.Errorf("scm: UnknownSecurityOptionsType: %v", value)
 }
