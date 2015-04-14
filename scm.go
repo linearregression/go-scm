@@ -88,6 +88,14 @@ type AccessTokenSecurityOptions struct {
 	AccessToken string
 }
 
+func ConvertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutOptions, error) {
+	return convertCheckoutOptions(checkoutOptions)
+}
+
+func ConvertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityOptions, error) {
+	return convertSecurityOptions(securityOptions)
+}
+
 func Checkout(
 	execClientProvider exec.ClientProvider,
 	checkoutOptions CheckoutOptions,
@@ -115,6 +123,143 @@ func CheckoutTarball(
 }
 
 // ***** PRIVATE *****
+
+func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutOptions, error) {
+	var externalCheckoutOptions *ExternalCheckoutOptions
+	if switchErr := CheckoutOptionsSwitch(
+		checkoutOptions,
+		func(gitCheckoutOptions *GitCheckoutOptions) error {
+			var externalSecurityOptions *ExternalSecurityOptions
+			var err error
+			if gitCheckoutOptions.SecurityOptions != nil {
+				externalSecurityOptions, err = ConvertSecurityOptions(gitCheckoutOptions.SecurityOptions)
+				if err != nil {
+					return err
+				}
+			}
+			externalCheckoutOptions = &ExternalCheckoutOptions{
+				Type:            "git",
+				User:            gitCheckoutOptions.User,
+				Host:            gitCheckoutOptions.Host,
+				Path:            gitCheckoutOptions.Path,
+				Branch:          gitCheckoutOptions.Branch,
+				CommitId:        gitCheckoutOptions.CommitId,
+				SecurityOptions: externalSecurityOptions,
+			}
+			return nil
+		},
+		func(githubCheckoutOptions *GithubCheckoutOptions) error {
+			var externalSecurityOptions *ExternalSecurityOptions
+			var err error
+			if githubCheckoutOptions.SecurityOptions != nil {
+				externalSecurityOptions, err = ConvertSecurityOptions(githubCheckoutOptions.SecurityOptions)
+				if err != nil {
+					return err
+				}
+			}
+			externalCheckoutOptions = &ExternalCheckoutOptions{
+				Type:            "github",
+				User:            githubCheckoutOptions.User,
+				Repository:      githubCheckoutOptions.Repository,
+				Branch:          githubCheckoutOptions.Branch,
+				CommitId:        githubCheckoutOptions.CommitId,
+				SecurityOptions: externalSecurityOptions,
+			}
+			return nil
+		},
+		func(hgCheckoutOptions *HgCheckoutOptions) error {
+			var externalSecurityOptions *ExternalSecurityOptions
+			var err error
+			if hgCheckoutOptions.SecurityOptions != nil {
+				externalSecurityOptions, err = ConvertSecurityOptions(hgCheckoutOptions.SecurityOptions)
+				if err != nil {
+					return err
+				}
+			}
+			externalCheckoutOptions = &ExternalCheckoutOptions{
+				Type:            "hg",
+				User:            hgCheckoutOptions.User,
+				Host:            hgCheckoutOptions.Host,
+				Path:            hgCheckoutOptions.Path,
+				ChangesetId:     hgCheckoutOptions.ChangesetId,
+				SecurityOptions: externalSecurityOptions,
+			}
+			return nil
+		},
+		func(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) error {
+			var externalSecurityOptions *ExternalSecurityOptions
+			var err error
+			if bitbucketGitCheckoutOptions.SecurityOptions != nil {
+				externalSecurityOptions, err = ConvertSecurityOptions(bitbucketGitCheckoutOptions.SecurityOptions)
+				if err != nil {
+					return err
+				}
+			}
+			externalCheckoutOptions = &ExternalCheckoutOptions{
+				Type:            "bitbucketGit",
+				User:            bitbucketGitCheckoutOptions.User,
+				Repository:      bitbucketGitCheckoutOptions.Repository,
+				Branch:          bitbucketGitCheckoutOptions.Branch,
+				CommitId:        bitbucketGitCheckoutOptions.CommitId,
+				SecurityOptions: externalSecurityOptions,
+			}
+			return nil
+		},
+		func(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error {
+			var externalSecurityOptions *ExternalSecurityOptions
+			var err error
+			if bitbucketHgCheckoutOptions.SecurityOptions != nil {
+				externalSecurityOptions, err = ConvertSecurityOptions(bitbucketHgCheckoutOptions.SecurityOptions)
+				if err != nil {
+					return err
+				}
+			}
+			externalCheckoutOptions = &ExternalCheckoutOptions{
+				Type:            "bitbucketHg",
+				User:            bitbucketHgCheckoutOptions.User,
+				Repository:      bitbucketHgCheckoutOptions.Repository,
+				ChangesetId:     bitbucketHgCheckoutOptions.ChangesetId,
+				SecurityOptions: externalSecurityOptions,
+			}
+			return nil
+		},
+	); switchErr != nil {
+		return nil, switchErr
+	}
+	return externalCheckoutOptions, nil
+}
+
+func convertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityOptions, error) {
+	var externalSecurityOptions *ExternalSecurityOptions
+	if switchErr := SecurityOptionsSwitch(
+		securityOptions,
+		func(sshSecurityOptions *SshSecurityOptions) error {
+			var privateKeyString string
+			if sshSecurityOptions.PrivateKey != nil {
+				data, err := ioutil.ReadAll(sshSecurityOptions.PrivateKey)
+				if err != nil {
+					return err
+				}
+				privateKeyString = string(data)
+			}
+			externalSecurityOptions = &ExternalSecurityOptions{
+				Type: "ssh",
+				StrictHostKeyChecking: sshSecurityOptions.StrictHostKeyChecking,
+				PrivateKey:            privateKeyString,
+			}
+			return nil
+		},
+		func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error {
+			externalSecurityOptions = &ExternalSecurityOptions{
+				AccessToken: accessTokenSecurityOptions.AccessToken,
+			}
+			return nil
+		},
+	); switchErr != nil {
+		return nil, switchErr
+	}
+	return externalSecurityOptions, nil
+}
 
 func checkout(
 	execClientProvider exec.ClientProvider,
