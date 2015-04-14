@@ -37,6 +37,10 @@ func (this *validationError) Type() ValidationErrorType {
 	return this.errorType
 }
 
+func ValidateCheckoutOptions(checkoutOptions CheckoutOptions) error {
+	return validateCheckoutOptions(checkoutOptions)
+}
+
 func validateCheckoutOptions(checkoutOptions CheckoutOptions) error {
 	return CheckoutOptionsSwitch(
 		checkoutOptions,
