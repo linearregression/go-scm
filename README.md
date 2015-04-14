@@ -279,13 +279,13 @@ type CloneRecordRecordConverter struct{}
 #### func (*CloneRecordRecordConverter) FromMap
 
 ```go
-func (this *CloneRecordRecordConverter) FromMap(m map[string]string) (record.RecordObject, error)
+func (this *CloneRecordRecordConverter) FromMap(m map[string][]byte) (record.RecordObject, error)
 ```
 
 #### func (*CloneRecordRecordConverter) ToMap
 
 ```go
-func (this *CloneRecordRecordConverter) ToMap(object record.RecordObject) (map[string]string, error)
+func (this *CloneRecordRecordConverter) ToMap(object record.RecordObject) (map[string][]byte, error)
 ```
 
 #### func (*CloneRecordRecordConverter) Type
@@ -311,6 +311,12 @@ type ExternalCheckoutOptions struct {
 ```
 
 
+#### func  ConvertCheckoutOptions
+
+```go
+func ConvertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutOptions, error)
+```
+
 #### type ExternalSecurityOptions
 
 ```go
@@ -322,6 +328,12 @@ type ExternalSecurityOptions struct {
 }
 ```
 
+
+#### func  ConvertSecurityOptions
+
+```go
+func ConvertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityOptions, error)
+```
 
 #### type GitCheckoutOptions
 
@@ -515,13 +527,13 @@ type TarballRecordRecordConverter struct{}
 #### func (*TarballRecordRecordConverter) FromMap
 
 ```go
-func (this *TarballRecordRecordConverter) FromMap(m map[string]string) (record.RecordObject, error)
+func (this *TarballRecordRecordConverter) FromMap(m map[string][]byte) (record.RecordObject, error)
 ```
 
 #### func (*TarballRecordRecordConverter) ToMap
 
 ```go
-func (this *TarballRecordRecordConverter) ToMap(object record.RecordObject) (map[string]string, error)
+func (this *TarballRecordRecordConverter) ToMap(object record.RecordObject) (map[string][]byte, error)
 ```
 
 #### func (*TarballRecordRecordConverter) Type
