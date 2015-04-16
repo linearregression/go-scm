@@ -709,7 +709,11 @@ func tarFiles(
 		}
 		fileList = filterFileList
 	}
-	return tarexec.NewTarClient(readFileManager, nil).Tar(fileList, path)
+	var buffer bytes.Buffer
+	if err := tarexec.NewTarClient(readFileManager, nil).Tar(fileList, path, &buffer); err != nil {
+		return nil, err
+	}
+	return &buffer, nil
 }
 
 func ignoreCheckoutFilePatterns(checkoutOptions CheckoutOptions) ([]string, error) {
