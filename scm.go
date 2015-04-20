@@ -251,6 +251,7 @@ func convertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityO
 		},
 		func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error {
 			externalSecurityOptions = &ExternalSecurityOptions{
+				Type:        "accessToken",
 				AccessToken: accessTokenSecurityOptions.AccessToken,
 			}
 			return nil
