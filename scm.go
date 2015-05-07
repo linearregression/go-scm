@@ -17,6 +17,10 @@ const (
 )
 
 var (
+	ValidationErrorTypeRequiredFieldMissing                         ValidationErrorType = "RequiredFieldMissing"
+	ValidationErrorTypeFieldShouldNotBeSet                          ValidationErrorType = "FieldShouldNotBeSet"
+	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
+
 	errorSecurityNotImplementedForCheckoutOptionsType = errors.New("SecurityNotImplementedForCheckoutOptionsType")
 	ignoreGitCheckoutFilePatterns                     = []string{
 		".git",
@@ -29,6 +33,13 @@ var (
 		".hgtags",
 	}
 )
+
+type ValidationErrorType string
+
+type ValidationError interface {
+	error
+	Type() ValidationErrorType
+}
 
 //go:generate gen-enumtype
 
@@ -96,6 +107,28 @@ func ConvertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityO
 	return convertSecurityOptions(securityOptions)
 }
 
+type ExternalCheckoutOptions struct {
+	Type            string                   `json:"type,omitempty" yaml:"type,omitempty"`
+	User            string                   `json:"user,omitempty" yaml:"user,omitempty"`
+	Host            string                   `json:"host,omitempty" yaml:"host,omitempty"`
+	Path            string                   `json:"path,omitempty" yaml:"path,omitempty"`
+	Repository      string                   `json:"repository,omitempty" yaml:"repository,omitempty"`
+	Branch          string                   `json:"branch,omitempty" yaml:"branch,omitempty"`
+	CommitId        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
+	ChangesetId     string                   `json:"changeset_id,omitempty" yaml:"changeset_id,omitempty"`
+	SecurityOptions *ExternalSecurityOptions `json:"security_options,omitempty" yaml:"security_options,omitempty"`
+}
+
+type ExternalSecurityOptions struct {
+	Type                  string `json:"type,omitempty" yaml:"type,omitempty"`
+	StrictHostKeyChecking bool   `json:"strict_host_key_checking,omitempty" yaml:"strict_host_key_checking,omitempty"`
+	PrivateKey            string `json:"private_key,omitempty" yaml:"private_key,omitempty"`
+	AccessToken           string `json:"access_token,omitempty" yaml:"access_token,omitempty"`
+}
+
+func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
+	return convertExternalCheckoutOptions(externalCheckoutOptions)
+}
 func Checkout(
 	execClientProvider exec.ClientProvider,
 	checkoutOptions CheckoutOptions,
@@ -260,6 +293,87 @@ func convertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityO
 		return nil, switchErr
 	}
 	return externalSecurityOptions, nil
+}
+
+func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOptions) (CheckoutOptions, error) {
+	var securityOptions SecurityOptions
+	if externalCheckoutOptions.SecurityOptions != nil {
+		securityOptionsType, err := SecurityOptionsTypeOf(externalCheckoutOptions.SecurityOptions.Type)
+		if err != nil {
+			return nil, err
+		}
+		securityOptions, err = securityOptionsType.NewSecurityOptions(
+			func() (*SshSecurityOptions, error) {
+				var privateKey bytes.Buffer
+				if _, err := privateKey.WriteString(externalCheckoutOptions.SecurityOptions.PrivateKey); err != nil {
+					return nil, err
+				}
+				return &SshSecurityOptions{
+					StrictHostKeyChecking: externalCheckoutOptions.SecurityOptions.StrictHostKeyChecking,
+					PrivateKey:            &privateKey,
+				}, nil
+			},
+			func() (*AccessTokenSecurityOptions, error) {
+				return &AccessTokenSecurityOptions{
+					AccessToken: externalCheckoutOptions.SecurityOptions.AccessToken,
+				}, nil
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	checkoutOptionsType, err := CheckoutOptionsTypeOf(externalCheckoutOptions.Type)
+	if err != nil {
+		return nil, err
+	}
+	return checkoutOptionsType.NewCheckoutOptions(
+		func() (*GitCheckoutOptions, error) {
+			return &GitCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Host:            externalCheckoutOptions.Host,
+				Path:            externalCheckoutOptions.Path,
+				Branch:          externalCheckoutOptions.Branch,
+				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*GithubCheckoutOptions, error) {
+			return &GithubCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
+				Branch:          externalCheckoutOptions.Branch,
+				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*HgCheckoutOptions, error) {
+			return &HgCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Host:            externalCheckoutOptions.Host,
+				Path:            externalCheckoutOptions.Path,
+				ChangesetId:     externalCheckoutOptions.ChangesetId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*BitbucketGitCheckoutOptions, error) {
+			return &BitbucketGitCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
+				Branch:          externalCheckoutOptions.Branch,
+				CommitId:        externalCheckoutOptions.CommitId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+		func() (*BitbucketHgCheckoutOptions, error) {
+			return &BitbucketHgCheckoutOptions{
+				User:            externalCheckoutOptions.User,
+				Repository:      externalCheckoutOptions.Repository,
+				ChangesetId:     externalCheckoutOptions.ChangesetId,
+				SecurityOptions: securityOptions,
+			}, nil
+		},
+	)
 }
 
 func checkout(
@@ -763,4 +877,183 @@ func fileMatches(
 
 func joinStrings(elems ...string) string {
 	return strings.Join(elems, "")
+}
+
+type validationError struct {
+	errorType ValidationErrorType
+	tags      map[string]string
+}
+
+func newValidationError(errorType ValidationErrorType, tags map[string]string) *validationError {
+	if tags == nil {
+		tags = make(map[string]string)
+	}
+	return &validationError{errorType, tags}
+}
+
+func (v *validationError) Error() string {
+	return fmt.Sprintf("%v %v", v.errorType, v.tags)
+}
+
+func (v *validationError) Type() ValidationErrorType {
+	return v.errorType
+}
+
+func validateCheckoutOptions(checkoutOptions CheckoutOptions) error {
+	return CheckoutOptionsSwitch(
+		checkoutOptions,
+		validateGitCheckoutOptions,
+		validateGithubCheckoutOptions,
+		validateHgCheckoutOptions,
+		validateBitbucketGitCheckoutOptions,
+		validateBitbucketHgCheckoutOptions,
+	)
+}
+
+func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) error {
+	if gitCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "User")
+	}
+	if gitCheckoutOptions.Host == "" {
+		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "Host")
+	}
+	if gitCheckoutOptions.Path == "" {
+		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "Path")
+	}
+	if gitCheckoutOptions.Branch == "" {
+		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "Branch")
+	}
+	if gitCheckoutOptions.CommitId == "" {
+		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "CommitId")
+	}
+	if gitCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(gitCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGit, SecurityOptionsTypeSsh); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions) error {
+	if githubCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "User")
+	}
+	if githubCheckoutOptions.Repository == "" {
+		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "Repository")
+	}
+	if githubCheckoutOptions.Branch == "" {
+		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "Branch")
+	}
+	if githubCheckoutOptions.CommitId == "" {
+		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "CommitId")
+	}
+	if githubCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(githubCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGithub, SecurityOptionsTypeSsh, SecurityOptionsTypeAccessToken); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateHgCheckoutOptions(hgCheckoutOptions *HgCheckoutOptions) error {
+	if hgCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*HgCheckoutOptions", "User")
+	}
+	if hgCheckoutOptions.Host == "" {
+		return newValidationErrorRequiredFieldMissing("*HgCheckoutOptions", "Host")
+	}
+	if hgCheckoutOptions.Path == "" {
+		return newValidationErrorRequiredFieldMissing("*HgCheckoutOptions", "Path")
+	}
+	if hgCheckoutOptions.ChangesetId == "" {
+		return newValidationErrorRequiredFieldMissing("*HgCheckoutOptions", "ChangesetId")
+	}
+	if hgCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(hgCheckoutOptions.SecurityOptions, CheckoutOptionsTypeHg, SecurityOptionsTypeSsh); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateBitbucketGitCheckoutOptions(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) error {
+	if bitbucketGitCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "User")
+	}
+	if bitbucketGitCheckoutOptions.Repository == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "Repository")
+	}
+	if bitbucketGitCheckoutOptions.Branch == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "Branch")
+	}
+	if bitbucketGitCheckoutOptions.CommitId == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "CommitId")
+	}
+	if bitbucketGitCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(bitbucketGitCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucketGit, SecurityOptionsTypeSsh); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateBitbucketHgCheckoutOptions(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error {
+	if bitbucketHgCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketHgCheckoutOptions", "User")
+	}
+	if bitbucketHgCheckoutOptions.Repository == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketHgCheckoutOptions", "Repository")
+	}
+	if bitbucketHgCheckoutOptions.ChangesetId == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketHgCheckoutOptions", "ChangesetId")
+	}
+	if bitbucketHgCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(bitbucketHgCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucketHg, SecurityOptionsTypeSsh); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateSecurityOptions(securityOptions SecurityOptions, checkoutType CheckoutOptionsType, allowedTypes ...SecurityOptionsType) error {
+	if !isAllowedSecurityOptionsType(securityOptions.Type(), allowedTypes) {
+		return newValidationErrorSecurityNotImplementedForCheckoutOptionsType(securityOptions.Type().String(), checkoutType.String())
+	}
+	return SecurityOptionsSwitch(
+		securityOptions,
+		validateSshSecurityOptions,
+		validateAccessTokenSecurityOptions,
+	)
+}
+
+func validateSshSecurityOptions(sshSecurityOptions *SshSecurityOptions) error {
+	return nil
+}
+
+func validateAccessTokenSecurityOptions(accessTokenSecurityOptions *AccessTokenSecurityOptions) error {
+	if accessTokenSecurityOptions.AccessToken == "" {
+		return newValidationErrorRequiredFieldMissing("AccessTokenSecurityOptions", "AccessToken")
+	}
+	return nil
+}
+
+func isAllowedSecurityOptionsType(securityType SecurityOptionsType, allowedTypes []SecurityOptionsType) bool {
+	for _, allowedType := range allowedTypes {
+		if securityType == allowedType {
+			return true
+		}
+	}
+	return false
+}
+
+func newValidationErrorRequiredFieldMissing(objectType string, fieldPath ...string) ValidationError {
+	return newValidationError(ValidationErrorTypeRequiredFieldMissing, map[string]string{"type": objectType, "fieldPath": strings.Join(fieldPath, ".")})
+}
+
+func newValidationErrorFieldShouldNotBeSet(objectType string, fieldPath ...string) ValidationError {
+	return newValidationError(ValidationErrorTypeFieldShouldNotBeSet, map[string]string{"type": objectType, "fieldPath": strings.Join(fieldPath, ".")})
+}
+
+func newValidationErrorSecurityNotImplementedForCheckoutOptionsType(securityType string, checkoutType string) ValidationError {
+	return newValidationError(ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType, map[string]string{"securityType": securityType, "checkoutType": checkoutType})
 }

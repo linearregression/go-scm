@@ -83,11 +83,17 @@ func testSmartystreetsCheckoutTarball(t *testing.T, clientProvider exec.ClientPr
 	if !ignoreCheckoutFiles {
 		file, err := os.Open(client.Join(client.DirPath(), ".git/HEAD"))
 		require.NoError(t, err)
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}()
 		data, err := ioutil.ReadAll(file)
 		require.NoError(t, err)
 		var buffer bytes.Buffer
-		buffer.Write(data)
+		if _, err = buffer.Write(data); err != nil {
+			t.Fatal(err)
+		}
 		require.Equal(t, testSmartystreetsCommitId, strings.TrimSpace(buffer.String()))
 	} else {
 		_, err := os.Open(client.Join(client.DirPath(), ".git"))
@@ -190,7 +196,11 @@ func getClientProvider(t *testing.T) exec.ClientProvider {
 func getSshOptions(t *testing.T) *SshSecurityOptions {
 	privateKeyReader, err := os.Open(os.Getenv("HOME") + "/.ssh/id_rsa")
 	require.NoError(t, err)
-	defer privateKeyReader.Close()
+	defer func() {
+		if err := privateKeyReader.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	data, err := ioutil.ReadAll(privateKeyReader)
 	require.NoError(t, err)
 	var buffer bytes.Buffer
