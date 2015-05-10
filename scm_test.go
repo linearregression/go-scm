@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	testSmartystreetsCommitId = "a40e854c17df0b1a98c90c250dc20e6cb2474dfa"
+	testSmartystreetsCommitID = "a40e854c17df0b1a98c90c250dc20e6cb2474dfa"
 	testHgGitChangesetId      = "4538981d2c3f3fcb594ad7f2ae7622380929e226"
 )
 
@@ -25,7 +25,7 @@ func TestGit(t *testing.T) {
 			Host:     "github.com",
 			Path:     "/peter-edge/smartystreets_ruby.git",
 			Branch:   "master",
-			CommitId: testSmartystreetsCommitId,
+			CommitID: testSmartystreetsCommitID,
 		},
 		tempDir,
 	); err != nil {
@@ -42,7 +42,7 @@ func TestGithub(t *testing.T) {
 			User:       "peter-edge",
 			Repository: "smartystreets_ruby",
 			Branch:     "master",
-			CommitId:   testSmartystreetsCommitId,
+			CommitID:   testSmartystreetsCommitID,
 			//SecurityOptions: NewGithubSecurityOptionsSsh(getSshOptions()),
 		},
 		tempDir,
@@ -69,9 +69,9 @@ func testSmartystreetsCheckoutTarball(t *testing.T, tempDir string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	commitId := strings.TrimSpace(string(data))
-	if testSmartystreetsCommitId != commitId {
-		t.Errorf("expected %s, got %s", testSmartystreetsCommitId, commitId)
+	commitID := strings.TrimSpace(string(data))
+	if testSmartystreetsCommitID != commitID {
+		t.Errorf("expected %s, got %s", testSmartystreetsCommitID, commitID)
 	}
 }
 

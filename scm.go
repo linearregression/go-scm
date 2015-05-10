@@ -39,7 +39,7 @@ type GitCheckoutOptions struct {
 	Host            string
 	Path            string
 	Branch          string
-	CommitId        string
+	CommitID        string
 	SecurityOptions SecurityOptions
 }
 
@@ -48,7 +48,7 @@ type GithubCheckoutOptions struct {
 	User            string
 	Repository      string
 	Branch          string
-	CommitId        string
+	CommitID        string
 	SecurityOptions SecurityOptions
 }
 
@@ -66,7 +66,7 @@ type BitbucketGitCheckoutOptions struct {
 	User            string
 	Repository      string
 	Branch          string
-	CommitId        string
+	CommitID        string
 	SecurityOptions SecurityOptions
 }
 
@@ -104,7 +104,7 @@ type ExternalCheckoutOptions struct {
 	Path            string                   `json:"path,omitempty" yaml:"path,omitempty"`
 	Repository      string                   `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Branch          string                   `json:"branch,omitempty" yaml:"branch,omitempty"`
-	CommitId        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
+	CommitID        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
 	ChangesetId     string                   `json:"changeset_id,omitempty" yaml:"changeset_id,omitempty"`
 	SecurityOptions *ExternalSecurityOptions `json:"security_options,omitempty" yaml:"security_options,omitempty"`
 }
@@ -150,7 +150,7 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 				Host:            gitCheckoutOptions.Host,
 				Path:            gitCheckoutOptions.Path,
 				Branch:          gitCheckoutOptions.Branch,
-				CommitId:        gitCheckoutOptions.CommitId,
+				CommitID:        gitCheckoutOptions.CommitID,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -169,7 +169,7 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 				User:            githubCheckoutOptions.User,
 				Repository:      githubCheckoutOptions.Repository,
 				Branch:          githubCheckoutOptions.Branch,
-				CommitId:        githubCheckoutOptions.CommitId,
+				CommitID:        githubCheckoutOptions.CommitID,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -207,7 +207,7 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 				User:            bitbucketGitCheckoutOptions.User,
 				Repository:      bitbucketGitCheckoutOptions.Repository,
 				Branch:          bitbucketGitCheckoutOptions.Branch,
-				CommitId:        bitbucketGitCheckoutOptions.CommitId,
+				CommitID:        bitbucketGitCheckoutOptions.CommitID,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -308,7 +308,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				Host:            externalCheckoutOptions.Host,
 				Path:            externalCheckoutOptions.Path,
 				Branch:          externalCheckoutOptions.Branch,
-				CommitId:        externalCheckoutOptions.CommitId,
+				CommitID:        externalCheckoutOptions.CommitID,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
@@ -317,7 +317,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				User:            externalCheckoutOptions.User,
 				Repository:      externalCheckoutOptions.Repository,
 				Branch:          externalCheckoutOptions.Branch,
-				CommitId:        externalCheckoutOptions.CommitId,
+				CommitID:        externalCheckoutOptions.CommitID,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
@@ -335,7 +335,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				User:            externalCheckoutOptions.User,
 				Repository:      externalCheckoutOptions.Repository,
 				Branch:          externalCheckoutOptions.Branch,
-				CommitId:        externalCheckoutOptions.CommitId,
+				CommitID:        externalCheckoutOptions.CommitID,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
@@ -412,7 +412,7 @@ func checkoutGit(
 	if err != nil {
 		return err
 	}
-	return checkoutGitWithExecutor(executor, sshCommand, url, gitCheckoutOptions.Branch, gitCheckoutOptions.CommitId, path)
+	return checkoutGitWithExecutor(executor, sshCommand, url, gitCheckoutOptions.Branch, gitCheckoutOptions.CommitID, path)
 }
 
 func checkoutGithub(
@@ -441,7 +441,7 @@ func checkoutGithub(
 	if err != nil {
 		return err
 	}
-	return checkoutGitWithExecutor(executor, sshCommand, url, githubCheckoutOptions.Branch, githubCheckoutOptions.CommitId, path)
+	return checkoutGitWithExecutor(executor, sshCommand, url, githubCheckoutOptions.Branch, githubCheckoutOptions.CommitID, path)
 }
 
 func checkoutHg(
@@ -499,7 +499,7 @@ func checkoutBitbucketGit(
 	if err != nil {
 		return err
 	}
-	return checkoutGitWithExecutor(executor, sshCommand, url, bitbucketGitCheckoutOptions.Branch, bitbucketGitCheckoutOptions.CommitId, path)
+	return checkoutGitWithExecutor(executor, sshCommand, url, bitbucketGitCheckoutOptions.Branch, bitbucketGitCheckoutOptions.CommitID, path)
 }
 
 func checkoutBitbucketHg(
@@ -678,7 +678,7 @@ func checkoutGitWithExecutor(
 	gitSshCommand string,
 	url string,
 	branch string,
-	commitId string,
+	commitID string,
 	path string,
 ) error {
 	var cloneStderr bytes.Buffer
@@ -697,7 +697,7 @@ func checkoutGitWithExecutor(
 	var checkoutStderr bytes.Buffer
 	if err := executor.Execute(
 		&exec.Cmd{
-			Args:   []string{"git", "checkout", "-f", commitId},
+			Args:   []string{"git", "checkout", "-f", commitID},
 			SubDir: path,
 			Stderr: &checkoutStderr,
 		},
@@ -790,8 +790,8 @@ func validateGitCheckoutOptions(gitCheckoutOptions *GitCheckoutOptions) error {
 	if gitCheckoutOptions.Branch == "" {
 		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "Branch")
 	}
-	if gitCheckoutOptions.CommitId == "" {
-		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "CommitId")
+	if gitCheckoutOptions.CommitID == "" {
+		return newValidationErrorRequiredFieldMissing("*GitCheckoutOptions", "CommitID")
 	}
 	if gitCheckoutOptions.SecurityOptions != nil {
 		if err := validateSecurityOptions(gitCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGit, SecurityOptionsTypeSsh); err != nil {
@@ -811,8 +811,8 @@ func validateGithubCheckoutOptions(githubCheckoutOptions *GithubCheckoutOptions)
 	if githubCheckoutOptions.Branch == "" {
 		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "Branch")
 	}
-	if githubCheckoutOptions.CommitId == "" {
-		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "CommitId")
+	if githubCheckoutOptions.CommitID == "" {
+		return newValidationErrorRequiredFieldMissing("*GithubCheckoutOptions", "CommitID")
 	}
 	if githubCheckoutOptions.SecurityOptions != nil {
 		if err := validateSecurityOptions(githubCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGithub, SecurityOptionsTypeSsh, SecurityOptionsTypeAccessToken); err != nil {
@@ -853,8 +853,8 @@ func validateBitbucketGitCheckoutOptions(bitbucketGitCheckoutOptions *BitbucketG
 	if bitbucketGitCheckoutOptions.Branch == "" {
 		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "Branch")
 	}
-	if bitbucketGitCheckoutOptions.CommitId == "" {
-		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "CommitId")
+	if bitbucketGitCheckoutOptions.CommitID == "" {
+		return newValidationErrorRequiredFieldMissing("*BitbucketGitCheckoutOptions", "CommitID")
 	}
 	if bitbucketGitCheckoutOptions.SecurityOptions != nil {
 		if err := validateSecurityOptions(bitbucketGitCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucketGit, SecurityOptionsTypeSsh); err != nil {
