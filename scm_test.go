@@ -13,7 +13,7 @@ import (
 
 const (
 	testSmartystreetsCommitID = "a40e854c17df0b1a98c90c250dc20e6cb2474dfa"
-	testHgGitChangesetId      = "4538981d2c3f3fcb594ad7f2ae7622380929e226"
+	testHgGitChangesetID      = "4538981d2c3f3fcb594ad7f2ae7622380929e226"
 )
 
 func TestGit(t *testing.T) {
@@ -43,7 +43,7 @@ func TestGithub(t *testing.T) {
 			Repository: "smartystreets_ruby",
 			Branch:     "master",
 			CommitID:   testSmartystreetsCommitID,
-			//SecurityOptions: NewGithubSecurityOptionsSsh(getSshOptions()),
+			//SecurityOptions: NewGithubSecurityOptionsSSH(getSSHOptions()),
 		},
 		tempDir,
 	); err != nil {
@@ -83,8 +83,8 @@ func TestHg(t *testing.T) {
 			User:        "hg",
 			Host:        "bitbucket.org",
 			Path:        "/durin42/hg-git",
-			ChangesetId: testHgGitChangesetId,
-			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
+			ChangesetID: testHgGitChangesetID,
+			//SecurityOptions: NewHgSecurityOptionsSSH(getSSHOptions()),
 		},
 		tempDir,
 	); err != nil {
@@ -100,8 +100,8 @@ func TestBitbucketHg(t *testing.T) {
 		&BitbucketHgCheckoutOptions{
 			User:        "durin42",
 			Repository:  "hg-git",
-			ChangesetId: testHgGitChangesetId,
-			//SecurityOptions: NewHgSecurityOptionsSsh(getSshOptions()),
+			ChangesetID: testHgGitChangesetID,
+			//SecurityOptions: NewHgSecurityOptionsSSH(getSSHOptions()),
 		},
 		tempDir,
 	); err != nil {
@@ -128,12 +128,12 @@ func testHgGitCheckoutTarball(t *testing.T, tempDir string) {
 		t.Fatal(err)
 	}
 	output := buffer.String()
-	if !strings.Contains(output, testHgGitChangesetId[0:12]) {
-		t.Errorf("expected %v, got %v", testHgGitChangesetId, output)
+	if !strings.Contains(output, testHgGitChangesetID[0:12]) {
+		t.Errorf("expected %v, got %v", testHgGitChangesetID, output)
 	}
 }
 
-func getSshOptions(t *testing.T) *SshSecurityOptions {
+func getSSHOptions(t *testing.T) *SSHSecurityOptions {
 	privateKeyReader, err := os.Open(os.Getenv("HOME") + "/.ssh/id_rsa")
 	if err != nil {
 		t.Fatal(err)
@@ -151,7 +151,7 @@ func getSshOptions(t *testing.T) *SshSecurityOptions {
 	if _, err := buffer.Write(data); err != nil {
 		t.Fatal(err)
 	}
-	return &SshSecurityOptions{
+	return &SSHSecurityOptions{
 		StrictHostKeyChecking: false,
 		PrivateKey:            &buffer,
 	}

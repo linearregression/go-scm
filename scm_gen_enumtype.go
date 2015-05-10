@@ -45,7 +45,7 @@ type SecurityOptions interface {
 	Type() SecurityOptionsType
 }
 
-func (this *SshSecurityOptions) Type() SecurityOptionsType {
+func (this *SSHSecurityOptions) Type() SecurityOptionsType {
 	return SecurityOptionsTypeSsh
 }
 
@@ -55,12 +55,12 @@ func (this *AccessTokenSecurityOptions) Type() SecurityOptionsType {
 
 func SecurityOptionsSwitch(
 	securityOptions SecurityOptions,
-	sshSecurityOptionsFunc func(sshSecurityOptions *SshSecurityOptions) error,
+	sSHSecurityOptionsFunc func(sSHSecurityOptions *SSHSecurityOptions) error,
 	accessTokenSecurityOptionsFunc func(accessTokenSecurityOptions *AccessTokenSecurityOptions) error,
 ) error {
 	switch securityOptions.Type() {
 	case SecurityOptionsTypeSsh:
-		return sshSecurityOptionsFunc(securityOptions.(*SshSecurityOptions))
+		return sSHSecurityOptionsFunc(securityOptions.(*SSHSecurityOptions))
 	case SecurityOptionsTypeAccessToken:
 		return accessTokenSecurityOptionsFunc(securityOptions.(*AccessTokenSecurityOptions))
 	default:
@@ -69,12 +69,12 @@ func SecurityOptionsSwitch(
 }
 
 func (this SecurityOptionsType) NewSecurityOptions(
-	sshSecurityOptionsFunc func() (*SshSecurityOptions, error),
+	sSHSecurityOptionsFunc func() (*SSHSecurityOptions, error),
 	accessTokenSecurityOptionsFunc func() (*AccessTokenSecurityOptions, error),
 ) (SecurityOptions, error) {
 	switch this {
 	case SecurityOptionsTypeSsh:
-		return sshSecurityOptionsFunc()
+		return sSHSecurityOptionsFunc()
 	case SecurityOptionsTypeAccessToken:
 		return accessTokenSecurityOptionsFunc()
 	default:
