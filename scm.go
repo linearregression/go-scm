@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/peter-edge/go-exec"
@@ -21,16 +22,6 @@ var (
 	ValidationErrorTypeSecurityNotImplementedForCheckoutOptionsType ValidationErrorType = "SecurityNotImplementedForCheckoutOptionsType"
 
 	errorSecurityNotImplementedForCheckoutOptionsType = errors.New("SecurityNotImplementedForCheckoutOptionsType")
-	ignoreGitCheckoutFilePatterns                     = []string{
-		".git",
-		".gitignore",
-	}
-	ignoreHgCheckoutFilePatterns = []string{
-		".hg",
-		".hgignore",
-		".hgsigs",
-		".hgtags",
-	}
 )
 
 type ValidationErrorType string
@@ -129,16 +120,12 @@ func ConvertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 	return convertExternalCheckoutOptions(externalCheckoutOptions)
 }
 func Checkout(
-	execClientProvider exec.ClientProvider,
 	checkoutOptions CheckoutOptions,
-	executor exec.Executor,
-	path string,
+	absolutePath string,
 ) error {
 	return checkout(
-		execClientProvider,
 		checkoutOptions,
-		executor,
-		path,
+		absolutePath,
 	)
 }
 
@@ -364,12 +351,19 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 }
 
 func checkout(
-	execClientProvider exec.ClientProvider,
 	checkoutOptions CheckoutOptions,
-	executor exec.Executor,
-	path string,
+	absolutePath string,
 ) error {
 	if err := validateCheckoutOptions(checkoutOptions); err != nil {
+		return err
+	}
+	execClientProvider, err := exec.NewClientProvider(&exec.OsExecOptions{})
+	if err != nil {
+		return err
+	}
+	baseDir, path := filepath.Split(absolutePath)
+	executor, err := exec.NewOsExecutor(baseDir)
+	if err != nil {
 		return err
 	}
 	return CheckoutOptionsSwitch(

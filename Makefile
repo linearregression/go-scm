@@ -12,34 +12,25 @@
 	errcheck \
 	pretest \
 	test \
-	testlong \
+	cov \
 	clean
 
-all: test install
+all: test
 
 deps:
 	go get -d -v ./...
-	go get -v github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 
 updatedeps:
 	go get -d -v -u -f ./...
-	go get -v -u -f github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 
 testdeps:
 	go get -d -v -t ./...
-	go get -v github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
-	go get -v golang.org/x/tools/cmd/vet
-	go get -v github.com/kisielk/errcheck
-	go get -v github.com/golang/lint/golint
 
 updatetestdeps:
 	go get -d -v -t -u -f ./...
-	go get -v -u -f github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
-	go get -v -u -f golang.org/x/tools/cmd/vet
-	go get -v -u -f github.com/kisielk/errcheck
-	go get -v -u -f github.com/golang/lint/golint
 
 generate:
+	go get -v github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
 	go generate ./...
 
 build: deps generate
@@ -49,21 +40,26 @@ install: deps generate
 	go install ./...
 
 lint: testdeps generate
+	go get -v github.com/golang/lint/golint
 	-golint ./...
 
 vet: testdeps generate
+	go get -v golang.org/x/tools/cmd/vet
 	go vet ./...
 
 errcheck: testdeps generate
+	go get -v github.com/kisielk/errcheck
 	errcheck ./...
 
 pretest: lint vet errcheck
 
-test: pretest
-	go test -test.v -test.short ./...
-
-testlong: pretest
+test: testdeps generate pretest
 	go test -test.v ./...
+
+cov: testdeps generate
+	go get -v github.com/axw/gocov/gocov
+	go get golang.org/x/tools/cmd/cover
+	gocov test | gocov report
 
 clean:
 	go clean -i ./...
