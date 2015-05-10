@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/peter-edge/go-exec"
-	tarexec "github.com/peter-edge/go-tar/exec"
 )
 
 const (
@@ -140,18 +139,6 @@ func Checkout(
 		checkoutOptions,
 		executor,
 		path,
-	)
-}
-
-func CheckoutTarball(
-	execClientProvider exec.ClientProvider,
-	checkoutOptions CheckoutOptions,
-	ignoreCheckoutFiles bool,
-) (io.Reader, error) {
-	return checkoutTarball(
-		execClientProvider,
-		checkoutOptions,
-		ignoreCheckoutFiles,
 	)
 }
 
@@ -403,21 +390,6 @@ func checkout(
 			return checkoutBitbucketHg(execClientProvider, bitbucketHgCheckoutOptions, executor, path)
 		},
 	)
-}
-
-func checkoutTarball(
-	execClientProvider exec.ClientProvider,
-	checkoutOptions CheckoutOptions,
-	ignoreCheckoutFiles bool,
-) (io.Reader, error) {
-	executorReadFileManager, err := execClientProvider.NewTempDirExecutorReadFileManager()
-	if err != nil {
-		return nil, err
-	}
-	if err := checkout(execClientProvider, checkoutOptions, executorReadFileManager, clonePath); err != nil {
-		return nil, err
-	}
-	return tarAndDestroy(executorReadFileManager, checkoutOptions, clonePath, ignoreCheckoutFiles)
 }
 
 func checkoutGit(
@@ -774,105 +746,6 @@ func checkoutHgWithExecutor(
 		return fmt.Errorf("CouldNotUpdate: %v %v", err.Error(), updateStderr.String())
 	}
 	return nil
-}
-
-func tarAndDestroy(
-	executorReadFileManager exec.ExecutorReadFileManager,
-	checkoutOptions CheckoutOptions,
-	path string,
-	ignoreCheckoutFiles bool,
-) (io.Reader, error) {
-	var reader io.Reader
-	var err error
-	if ignoreCheckoutFiles {
-		ignoreCheckoutFilePatterns, err := ignoreCheckoutFilePatterns(checkoutOptions)
-		if err != nil {
-			return nil, err
-		}
-		reader, err = tarFiles(executorReadFileManager, ignoreCheckoutFilePatterns, path)
-	} else {
-		reader, err = tarFiles(executorReadFileManager, nil, path)
-	}
-	if err != nil {
-		return nil, err
-	}
-	if err := executorReadFileManager.Destroy(); err != nil {
-		return nil, err
-	}
-	return reader, nil
-}
-
-func tarFiles(
-	readFileManager exec.ReadFileManager,
-	ignoreCheckoutFilePatterns []string,
-	path string,
-) (io.Reader, error) {
-	fileList, err := readFileManager.ListRegularFiles(path)
-	if err != nil {
-		return nil, err
-	}
-	if ignoreCheckoutFilePatterns != nil && len(ignoreCheckoutFilePatterns) > 0 {
-		filterFileList := make([]string, 0)
-		for _, file := range fileList {
-			matches, err := fileMatches(readFileManager, ignoreCheckoutFilePatterns, file, path)
-			if err != nil {
-				return nil, err
-			}
-			if !matches {
-				filterFileList = append(filterFileList, file)
-			}
-		}
-		fileList = filterFileList
-	}
-	var buffer bytes.Buffer
-	if err := tarexec.NewTarClient(readFileManager, nil).Tar(fileList, path, &buffer); err != nil {
-		return nil, err
-	}
-	return &buffer, nil
-}
-
-func ignoreCheckoutFilePatterns(checkoutOptions CheckoutOptions) ([]string, error) {
-	var ignoreCheckoutFilePatterns []string
-	if err := CheckoutOptionsSwitch(
-		checkoutOptions,
-		func(gitCheckoutOptions *GitCheckoutOptions) error {
-			ignoreCheckoutFilePatterns = ignoreGitCheckoutFilePatterns
-			return nil
-		},
-		func(githubCheckoutOptions *GithubCheckoutOptions) error {
-			ignoreCheckoutFilePatterns = ignoreGitCheckoutFilePatterns
-			return nil
-		},
-		func(hgCheckoutOptions *HgCheckoutOptions) error {
-			ignoreCheckoutFilePatterns = ignoreHgCheckoutFilePatterns
-			return nil
-		},
-		func(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) error {
-			ignoreCheckoutFilePatterns = ignoreGitCheckoutFilePatterns
-			return nil
-		},
-		func(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error {
-			ignoreCheckoutFilePatterns = ignoreHgCheckoutFilePatterns
-			return nil
-		},
-	); err != nil {
-		return nil, err
-	}
-	return ignoreCheckoutFilePatterns, nil
-}
-
-func fileMatches(
-	readFileManager exec.ReadFileManager,
-	patterns []string,
-	path string,
-	basePath string,
-) (bool, error) {
-	for _, pattern := range patterns {
-		if strings.HasPrefix(path, readFileManager.Join(basePath, pattern)) {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func joinStrings(elems ...string) string {
