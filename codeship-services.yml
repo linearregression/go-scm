@@ -1,5 +1,0 @@
-linux_amd64:
-  build: .
-  environment:
-    GOOS: linux
-    GOARCH: amd64
