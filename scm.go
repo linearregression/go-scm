@@ -637,9 +637,17 @@ func getHgURL(hgCheckoutOptions *HgCheckoutOptions) (string, error) {
 }
 
 func getBitbucketGitURL(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) (string, error) {
-	if bitbucketGitCheckoutOptions.SecurityOptions == nil || bitbucketGitCheckoutOptions.SecurityOptions.Type() == SecurityOptionsTypeSsh {
+	if bitbucketGitCheckoutOptions.SecurityOptions == nil {
 		return getSSHURL(
 			"ssh://",
+			"git",
+			"bitbucket.org",
+			joinStrings(":", bitbucketGitCheckoutOptions.User, "/", bitbucketGitCheckoutOptions.Repository, ".git"),
+		), nil
+	}
+	if bitbucketGitCheckoutOptions.SecurityOptions.Type() == SecurityOptionsTypeSsh {
+		return getSSHURL(
+			"",
 			"git",
 			"bitbucket.org",
 			joinStrings(":", bitbucketGitCheckoutOptions.User, "/", bitbucketGitCheckoutOptions.Repository, ".git"),
