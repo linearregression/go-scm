@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peter-edge/go-exec"
+	"github.com/codeship/go-exec"
 )
 
 const (

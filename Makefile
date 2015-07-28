@@ -30,7 +30,7 @@ updatetestdeps:
 	go get -d -v -t -u -f ./...
 
 generate:
-	go get -v github.com/peter-edge/go-gen-enumtype/cmd/gen-enumtype
+	go get -v github.com/codeship/go-gen-enumtype/cmd/gen-enumtype
 	go generate ./...
 
 build: deps generate
