@@ -36,45 +36,60 @@ type ValidationError interface {
 // @gen-enumtype CheckoutOptions git 0
 type GitCheckoutOptions struct {
 	User            string
+	UserName        string
+	Email           string
 	Host            string
 	Path            string
 	Branch          string
 	CommitID        string
+	CommitMessage   string
 	SecurityOptions SecurityOptions
 }
 
 // @gen-enumtype CheckoutOptions github 1
 type GithubCheckoutOptions struct {
 	User            string
+	UserName        string
+	Email           string
 	Repository      string
 	Branch          string
 	CommitID        string
+	CommitMessage   string
 	SecurityOptions SecurityOptions
 }
 
 // @gen-enumtype CheckoutOptions hg 2
 type HgCheckoutOptions struct {
 	User            string
+	UserName        string
+	Email           string
 	Host            string
 	Path            string
 	ChangesetID     string
+	CommitMessage   string
 	SecurityOptions SecurityOptions
 }
 
 // @gen-enumtype CheckoutOptions bitbucketGit 3
 type BitbucketGitCheckoutOptions struct {
 	User            string
+	UserName        string
+	Email           string
 	Repository      string
 	Branch          string
 	CommitID        string
+	CommitMessage   string
 	SecurityOptions SecurityOptions
 }
 
 // @gen-enumtype CheckoutOptions bitbucketHg 4
 type BitbucketHgCheckoutOptions struct {
 	User            string
+	UserName        string
+	Email           string
 	Repository      string
 	ChangesetID     string
+	CommitMessage   string
 	SecurityOptions SecurityOptions
 }
 
@@ -100,11 +115,14 @@ func ConvertSecurityOptions(securityOptions SecurityOptions) (*ExternalSecurityO
 type ExternalCheckoutOptions struct {
 	Type            string                   `json:"type,omitempty" yaml:"type,omitempty"`
 	User            string                   `json:"user,omitempty" yaml:"user,omitempty"`
+	UserName        string                   `json:"user_name,omitempty" yaml:"user_name,omitempty"`
+	Email           string                   `json:"email,omitempty" yaml:"email,omitempty"`
 	Host            string                   `json:"host,omitempty" yaml:"host,omitempty"`
 	Path            string                   `json:"path,omitempty" yaml:"path,omitempty"`
 	Repository      string                   `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Branch          string                   `json:"branch,omitempty" yaml:"branch,omitempty"`
 	CommitID        string                   `json:"commit_id,omitempty" yaml:"commit_id,omitempty"`
+	CommitMessage   string                   `json:"commit_message,omitempty" yaml:"commit_message,omitempty"`
 	ChangesetID     string                   `json:"changeset_id,omitempty" yaml:"changeset_id,omitempty"`
 	SecurityOptions *ExternalSecurityOptions `json:"security_options,omitempty" yaml:"security_options,omitempty"`
 }
@@ -147,10 +165,13 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 			externalCheckoutOptions = &ExternalCheckoutOptions{
 				Type:            "git",
 				User:            gitCheckoutOptions.User,
+				UserName:        gitCheckoutOptions.UserName,
+				Email:           gitCheckoutOptions.Email,
 				Host:            gitCheckoutOptions.Host,
 				Path:            gitCheckoutOptions.Path,
 				Branch:          gitCheckoutOptions.Branch,
 				CommitID:        gitCheckoutOptions.CommitID,
+				CommitMessage:   gitCheckoutOptions.CommitMessage,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -167,9 +188,12 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 			externalCheckoutOptions = &ExternalCheckoutOptions{
 				Type:            "github",
 				User:            githubCheckoutOptions.User,
+				UserName:        githubCheckoutOptions.UserName,
+				Email:           githubCheckoutOptions.Email,
 				Repository:      githubCheckoutOptions.Repository,
 				Branch:          githubCheckoutOptions.Branch,
 				CommitID:        githubCheckoutOptions.CommitID,
+				CommitMessage:   githubCheckoutOptions.CommitMessage,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -186,9 +210,12 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 			externalCheckoutOptions = &ExternalCheckoutOptions{
 				Type:            "hg",
 				User:            hgCheckoutOptions.User,
+				UserName:        hgCheckoutOptions.UserName,
+				Email:           hgCheckoutOptions.Email,
 				Host:            hgCheckoutOptions.Host,
 				Path:            hgCheckoutOptions.Path,
 				ChangesetID:     hgCheckoutOptions.ChangesetID,
+				CommitMessage:   hgCheckoutOptions.CommitMessage,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -205,9 +232,12 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 			externalCheckoutOptions = &ExternalCheckoutOptions{
 				Type:            "bitbucketGit",
 				User:            bitbucketGitCheckoutOptions.User,
+				UserName:        bitbucketGitCheckoutOptions.UserName,
+				Email:           bitbucketGitCheckoutOptions.Email,
 				Repository:      bitbucketGitCheckoutOptions.Repository,
 				Branch:          bitbucketGitCheckoutOptions.Branch,
 				CommitID:        bitbucketGitCheckoutOptions.CommitID,
+				CommitMessage:   bitbucketGitCheckoutOptions.CommitMessage,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -224,8 +254,11 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 			externalCheckoutOptions = &ExternalCheckoutOptions{
 				Type:            "bitbucketHg",
 				User:            bitbucketHgCheckoutOptions.User,
+				UserName:        bitbucketHgCheckoutOptions.UserName,
+				Email:           bitbucketHgCheckoutOptions.Email,
 				Repository:      bitbucketHgCheckoutOptions.Repository,
 				ChangesetID:     bitbucketHgCheckoutOptions.ChangesetID,
+				CommitMessage:   bitbucketHgCheckoutOptions.CommitMessage,
 				SecurityOptions: externalSecurityOptions,
 			}
 			return nil
@@ -305,45 +338,60 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 		func() (*GitCheckoutOptions, error) {
 			return &GitCheckoutOptions{
 				User:            externalCheckoutOptions.User,
+				UserName:        externalCheckoutOptions.UserName,
+				Email:           externalCheckoutOptions.Email,
 				Host:            externalCheckoutOptions.Host,
 				Path:            externalCheckoutOptions.Path,
 				Branch:          externalCheckoutOptions.Branch,
 				CommitID:        externalCheckoutOptions.CommitID,
+				CommitMessage:   externalCheckoutOptions.CommitMessage,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
 		func() (*GithubCheckoutOptions, error) {
 			return &GithubCheckoutOptions{
 				User:            externalCheckoutOptions.User,
+				UserName:        externalCheckoutOptions.UserName,
+				Email:           externalCheckoutOptions.Email,
 				Repository:      externalCheckoutOptions.Repository,
 				Branch:          externalCheckoutOptions.Branch,
 				CommitID:        externalCheckoutOptions.CommitID,
+				CommitMessage:   externalCheckoutOptions.CommitMessage,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
 		func() (*HgCheckoutOptions, error) {
 			return &HgCheckoutOptions{
 				User:            externalCheckoutOptions.User,
+				UserName:        externalCheckoutOptions.UserName,
+				Email:           externalCheckoutOptions.Email,
 				Host:            externalCheckoutOptions.Host,
 				Path:            externalCheckoutOptions.Path,
 				ChangesetID:     externalCheckoutOptions.ChangesetID,
+				CommitMessage:   externalCheckoutOptions.CommitMessage,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
 		func() (*BitbucketGitCheckoutOptions, error) {
 			return &BitbucketGitCheckoutOptions{
 				User:            externalCheckoutOptions.User,
+				UserName:        externalCheckoutOptions.UserName,
+				Email:           externalCheckoutOptions.Email,
 				Repository:      externalCheckoutOptions.Repository,
 				Branch:          externalCheckoutOptions.Branch,
 				CommitID:        externalCheckoutOptions.CommitID,
+				CommitMessage:   externalCheckoutOptions.CommitMessage,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
 		func() (*BitbucketHgCheckoutOptions, error) {
 			return &BitbucketHgCheckoutOptions{
 				User:            externalCheckoutOptions.User,
+				UserName:        externalCheckoutOptions.UserName,
+				Email:           externalCheckoutOptions.Email,
 				Repository:      externalCheckoutOptions.Repository,
 				ChangesetID:     externalCheckoutOptions.ChangesetID,
+				CommitMessage:   externalCheckoutOptions.CommitMessage,
 				SecurityOptions: securityOptions,
 			}, nil
 		},
