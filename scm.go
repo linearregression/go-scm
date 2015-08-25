@@ -388,6 +388,7 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 		},
 		func() (*BitbucketGitCheckoutOptions, error) {
 			return &BitbucketGitCheckoutOptions{
+				User:              externalCheckoutOptions.User,
 				CommitterName:     externalCheckoutOptions.CommitterName,
 				CommitterUsername: externalCheckoutOptions.CommitterUsername,
 				Email:             externalCheckoutOptions.Email,
