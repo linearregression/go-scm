@@ -756,7 +756,7 @@ func checkoutGitWithExecutor(
 	var cloneStderr bytes.Buffer
 	cmd := exec.Cmd{
 		// TODO(peter): if the commit id is more than 50 back, the checkout will fail
-		Args:   []string{"git", "clone", "--branch", branch, "--depth", "50", "--no-shallow-submodules", "--recursive", url, path},
+		Args:   []string{"git", "clone", "--branch", branch, "--depth", "50", "--no-shallow-submodules", "--recursive", "--jobs 4", url, path},
 		Stderr: &cloneStderr,
 	}
 	if gitSSHCommand != "" {
