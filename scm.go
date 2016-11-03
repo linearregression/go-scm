@@ -98,6 +98,19 @@ type BitbucketHgCheckoutOptions struct {
 	SecurityOptions   SecurityOptions
 }
 
+// @gen-enumtype CheckoutOptions gitlab 5
+type GitlabCheckoutOptions struct {
+	User              string
+	CommitterName     string
+	CommitterUsername string
+	Email             string
+	Repository        string
+	Branch            string
+	CommitID          string
+	CommitMessage     string
+	SecurityOptions   SecurityOptions
+}
+
 // @gen-enumtype SecurityOptions ssh 0
 type SSHSecurityOptions struct {
 	StrictHostKeyChecking bool
@@ -274,6 +287,30 @@ func convertCheckoutOptions(checkoutOptions CheckoutOptions) (*ExternalCheckoutO
 			}
 			return nil
 		},
+
+		func(gitlabCheckoutOptions *GitlabCheckoutOptions) error {
+			var externalSecurityOptions *ExternalSecurityOptions
+			var err error
+			if gitlabCheckoutOptions.SecurityOptions != nil {
+				externalSecurityOptions, err = ConvertSecurityOptions(gitlabCheckoutOptions.SecurityOptions)
+				if err != nil {
+					return err
+				}
+			}
+			externalCheckoutOptions = &ExternalCheckoutOptions{
+				Type:              "gitlab",
+				User:              gitlabCheckoutOptions.User,
+				CommitterName:     gitlabCheckoutOptions.CommitterName,
+				CommitterUsername: gitlabCheckoutOptions.CommitterUsername,
+				Email:             gitlabCheckoutOptions.Email,
+				Repository:        gitlabCheckoutOptions.Repository,
+				Branch:            gitlabCheckoutOptions.Branch,
+				CommitID:          gitlabCheckoutOptions.CommitID,
+				CommitMessage:     gitlabCheckoutOptions.CommitMessage,
+				SecurityOptions:   externalSecurityOptions,
+			}
+			return nil
+		},
 	); switchErr != nil {
 		return nil, switchErr
 	}
@@ -411,6 +448,20 @@ func convertExternalCheckoutOptions(externalCheckoutOptions *ExternalCheckoutOpt
 				SecurityOptions:   securityOptions,
 			}, nil
 		},
+		func() (*GitlabCheckoutOptions, error) {
+			return &GitlabCheckoutOptions{
+				User:              externalCheckoutOptions.User,
+				CommitterName:     externalCheckoutOptions.CommitterName,
+				CommitterUsername: externalCheckoutOptions.CommitterUsername,
+				Email:             externalCheckoutOptions.Email,
+				Repository:        externalCheckoutOptions.Repository,
+				Branch:            externalCheckoutOptions.Branch,
+				CommitID:          externalCheckoutOptions.CommitID,
+				CommitMessage:     externalCheckoutOptions.CommitMessage,
+				SecurityOptions:   securityOptions,
+			}, nil
+
+		},
 	)
 }
 
@@ -446,6 +497,9 @@ func checkout(
 		},
 		func(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error {
 			return checkoutBitbucketHg(execClientProvider, bitbucketHgCheckoutOptions, executor, path)
+		},
+		func(gitlabCheckoutOptions *GitlabCheckoutOptions) error {
+			return checkoutGitlab(execClientProvider, gitlabCheckoutOptions, executor, path)
 		},
 	)
 }
@@ -643,6 +697,35 @@ func getSSHCommand(execClientProvider exec.ClientProvider, securityOptions Secur
 	return sshCommand, client, nil
 }
 
+func checkoutGitlab(
+	execClientProvider exec.ClientProvider,
+	gitlabCheckoutOptions *GitlabCheckoutOptions,
+	executor exec.Executor,
+	path string,
+) (retErr error) {
+	var sshCommand string
+	var client exec.Client
+	var err error
+	if gitlabCheckoutOptions.SecurityOptions != nil {
+		sshCommand, client, err = getSSHCommand(execClientProvider, gitlabCheckoutOptions.SecurityOptions)
+		if err != nil {
+			return err
+		}
+		if client != nil {
+			defer func() {
+				if err := client.Destroy(); err != nil && retErr == nil {
+					retErr = err
+				}
+			}()
+		}
+	}
+	url, err := getGitlabURL(gitlabCheckoutOptions)
+	if err != nil {
+		return err
+	}
+	return checkoutGitWithExecutor(executor, sshCommand, url, gitlabCheckoutOptions.Branch, gitlabCheckoutOptions.CommitID, path)
+}
+
 func getGitURL(gitCheckoutOptions *GitCheckoutOptions) (string, error) {
 	if gitCheckoutOptions.SecurityOptions == nil {
 		return getGitReadOnlyURL(
@@ -727,6 +810,32 @@ func getBitbucketHgURL(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) (
 			"hg",
 			"bitbucket.org",
 			joinStrings("/", bitbucketHgCheckoutOptions.User, "/", bitbucketHgCheckoutOptions.Repository),
+		), nil
+	}
+	return "", errorSecurityNotImplementedForCheckoutOptionsType
+}
+
+func getGitlabURL(gitlabCheckoutOptions *GitlabCheckoutOptions) (string, error) {
+	if gitlabCheckoutOptions.SecurityOptions == nil {
+		return getGitReadOnlyURL(
+			"git",
+			"gitlab.com",
+			joinStrings("/", gitlabCheckoutOptions.User, "/", gitlabCheckoutOptions.Repository, ".git"),
+		), nil
+	}
+	if gitlabCheckoutOptions.SecurityOptions.Type() == SecurityOptionsTypeSsh {
+		return getSSHURL(
+			"",
+			"git",
+			"gitlab.com",
+			joinStrings(":", gitlabCheckoutOptions.User, "/", gitlabCheckoutOptions.Repository, ".git"),
+		), nil
+	}
+	if gitlabCheckoutOptions.SecurityOptions.Type() == SecurityOptionsTypeAccessToken {
+		return getAccessTokenURL(
+			(gitlabCheckoutOptions.SecurityOptions.(*AccessTokenSecurityOptions)).AccessToken,
+			"gitlab.com",
+			joinStrings("/", gitlabCheckoutOptions.User, "/", gitlabCheckoutOptions.Repository, ".git"),
 		), nil
 	}
 	return "", errorSecurityNotImplementedForCheckoutOptionsType
@@ -846,6 +955,7 @@ func validateCheckoutOptions(checkoutOptions CheckoutOptions) error {
 		validateHgCheckoutOptions,
 		validateBitbucketGitCheckoutOptions,
 		validateBitbucketHgCheckoutOptions,
+		validateGitlabCheckoutOptions,
 	)
 }
 
@@ -948,6 +1058,27 @@ func validateBitbucketHgCheckoutOptions(bitbucketHgCheckoutOptions *BitbucketHgC
 	}
 	if bitbucketHgCheckoutOptions.SecurityOptions != nil {
 		if err := validateSecurityOptions(bitbucketHgCheckoutOptions.SecurityOptions, CheckoutOptionsTypeBitbucketHg, SecurityOptionsTypeSsh); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func validateGitlabCheckoutOptions(gitlabCheckoutOptions *GitlabCheckoutOptions) error {
+	if gitlabCheckoutOptions.User == "" {
+		return newValidationErrorRequiredFieldMissing("*GitlabCheckoutOptions", "User")
+	}
+	if gitlabCheckoutOptions.Repository == "" {
+		return newValidationErrorRequiredFieldMissing("*GitlabCheckoutOptions", "Repository")
+	}
+	if gitlabCheckoutOptions.Branch == "" {
+		return newValidationErrorRequiredFieldMissing("*GitlabCheckoutOptions", "Branch")
+	}
+	if gitlabCheckoutOptions.CommitID == "" {
+		return newValidationErrorRequiredFieldMissing("*GitlabCheckoutOptions", "CommitID")
+	}
+	if gitlabCheckoutOptions.SecurityOptions != nil {
+		if err := validateSecurityOptions(gitlabCheckoutOptions.SecurityOptions, CheckoutOptionsTypeGitlab, SecurityOptionsTypeSsh, SecurityOptionsTypeAccessToken); err != nil {
 			return nil
 		}
 	}
