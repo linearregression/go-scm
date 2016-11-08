@@ -120,6 +120,7 @@ var CheckoutOptionsTypeGithub CheckoutOptionsType = 1
 var CheckoutOptionsTypeHg CheckoutOptionsType = 2
 var CheckoutOptionsTypeBitbucketGit CheckoutOptionsType = 3
 var CheckoutOptionsTypeBitbucketHg CheckoutOptionsType = 4
+var CheckoutOptionsTypeGitlab CheckoutOptionsType = 5
 
 var checkoutOptionsTypeToString = map[CheckoutOptionsType]string{
 	CheckoutOptionsTypeGit: "git",
@@ -127,6 +128,7 @@ var checkoutOptionsTypeToString = map[CheckoutOptionsType]string{
 	CheckoutOptionsTypeHg: "hg",
 	CheckoutOptionsTypeBitbucketGit: "bitbucketGit",
 	CheckoutOptionsTypeBitbucketHg: "bitbucketHg",
+	CheckoutOptionsTypeGitlab: "gitlab",
 }
 
 var stringToCheckoutOptionsType = map[string]CheckoutOptionsType{
@@ -135,6 +137,7 @@ var stringToCheckoutOptionsType = map[string]CheckoutOptionsType{
 	"hg": CheckoutOptionsTypeHg,
 	"bitbucketGit": CheckoutOptionsTypeBitbucketGit,
 	"bitbucketHg": CheckoutOptionsTypeBitbucketHg,
+	"gitlab": CheckoutOptionsTypeGitlab,
 }
 
 func AllCheckoutOptionsTypes() []CheckoutOptionsType {
@@ -144,6 +147,7 @@ func AllCheckoutOptionsTypes() []CheckoutOptionsType {
 		CheckoutOptionsTypeHg,
 		CheckoutOptionsTypeBitbucketGit,
 		CheckoutOptionsTypeBitbucketHg,
+		CheckoutOptionsTypeGitlab,
 	}
 }
 
@@ -186,6 +190,10 @@ func (this *BitbucketHgCheckoutOptions) Type() CheckoutOptionsType {
 	return CheckoutOptionsTypeBitbucketHg
 }
 
+func (this *GitlabCheckoutOptions) Type() CheckoutOptionsType {
+	return CheckoutOptionsTypeGitlab
+}
+
 func CheckoutOptionsSwitch(
 	checkoutOptions CheckoutOptions,
 	gitCheckoutOptionsFunc func(gitCheckoutOptions *GitCheckoutOptions) error,
@@ -193,6 +201,7 @@ func CheckoutOptionsSwitch(
 	hgCheckoutOptionsFunc func(hgCheckoutOptions *HgCheckoutOptions) error,
 	bitbucketGitCheckoutOptionsFunc func(bitbucketGitCheckoutOptions *BitbucketGitCheckoutOptions) error,
 	bitbucketHgCheckoutOptionsFunc func(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) error,
+	gitlabCheckoutOptionsFunc func(gitlabCheckoutOptions *GitlabCheckoutOptions) error,
 ) error {
 	switch checkoutOptions.Type() {
 	case CheckoutOptionsTypeGit:
@@ -205,6 +214,8 @@ func CheckoutOptionsSwitch(
 		return bitbucketGitCheckoutOptionsFunc(checkoutOptions.(*BitbucketGitCheckoutOptions))
 	case CheckoutOptionsTypeBitbucketHg:
 		return bitbucketHgCheckoutOptionsFunc(checkoutOptions.(*BitbucketHgCheckoutOptions))
+	case CheckoutOptionsTypeGitlab:
+		return gitlabCheckoutOptionsFunc(checkoutOptions.(*GitlabCheckoutOptions))
 	default:
 		return newErrorUnknownCheckoutOptionsType(checkoutOptions.Type())
 	}
@@ -216,6 +227,7 @@ func (this CheckoutOptionsType) NewCheckoutOptions(
 	hgCheckoutOptionsFunc func() (*HgCheckoutOptions, error),
 	bitbucketGitCheckoutOptionsFunc func() (*BitbucketGitCheckoutOptions, error),
 	bitbucketHgCheckoutOptionsFunc func() (*BitbucketHgCheckoutOptions, error),
+	gitlabCheckoutOptionsFunc func() (*GitlabCheckoutOptions, error),
 ) (CheckoutOptions, error) {
 	switch this {
 	case CheckoutOptionsTypeGit:
@@ -228,6 +240,8 @@ func (this CheckoutOptionsType) NewCheckoutOptions(
 		return bitbucketGitCheckoutOptionsFunc()
 	case CheckoutOptionsTypeBitbucketHg:
 		return bitbucketHgCheckoutOptionsFunc()
+	case CheckoutOptionsTypeGitlab:
+		return gitlabCheckoutOptionsFunc()
 	default:
 		return nil, newErrorUnknownCheckoutOptionsType(this)
 	}
@@ -239,6 +253,7 @@ func (this CheckoutOptionsType) Produce(
 	checkoutOptionsTypeHgFunc func() (interface{}, error),
 	checkoutOptionsTypeBitbucketGitFunc func() (interface{}, error),
 	checkoutOptionsTypeBitbucketHgFunc func() (interface{}, error),
+	checkoutOptionsTypeGitlabFunc func() (interface{}, error),
 ) (interface{}, error) {
 	switch this {
 	case CheckoutOptionsTypeGit:
@@ -251,6 +266,8 @@ func (this CheckoutOptionsType) Produce(
 		return checkoutOptionsTypeBitbucketGitFunc()
 	case CheckoutOptionsTypeBitbucketHg:
 		return checkoutOptionsTypeBitbucketHgFunc()
+	case CheckoutOptionsTypeGitlab:
+		return checkoutOptionsTypeGitlabFunc()
 	default:
 		return nil, newErrorUnknownCheckoutOptionsType(this)
 	}
@@ -262,6 +279,7 @@ func (this CheckoutOptionsType) Handle(
 	checkoutOptionsTypeHgFunc func() error,
 	checkoutOptionsTypeBitbucketGitFunc func() error,
 	checkoutOptionsTypeBitbucketHgFunc func() error,
+	checkoutOptionsTypeGitlabFunc func() error,
 ) error {
 	switch this {
 	case CheckoutOptionsTypeGit:
@@ -274,6 +292,8 @@ func (this CheckoutOptionsType) Handle(
 		return checkoutOptionsTypeBitbucketGitFunc()
 	case CheckoutOptionsTypeBitbucketHg:
 		return checkoutOptionsTypeBitbucketHgFunc()
+	case CheckoutOptionsTypeGitlab:
+		return checkoutOptionsTypeGitlabFunc()
 	default:
 		return newErrorUnknownCheckoutOptionsType(this)
 	}

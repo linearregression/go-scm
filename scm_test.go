@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	testBananaCommitID        = "d1f47a7c9c618dd338cf1ef9ba83639005b02127"
 	testSmartystreetsCommitID = "a40e854c17df0b1a98c90c250dc20e6cb2474dfa"
 	testHgGitChangesetID      = "4538981d2c3f3fcb594ad7f2ae7622380929e226"
 )
@@ -130,6 +131,47 @@ func testHgGitCheckoutTarball(t *testing.T, tempDir string) {
 	output := buffer.String()
 	if !strings.Contains(output, testHgGitChangesetID[0:12]) {
 		t.Errorf("expected %v, got %v", testHgGitChangesetID, output)
+	}
+}
+
+func TestGitlab(t *testing.T) {
+	t.Parallel()
+	tempDir := getTempDir(t)
+	if err := Checkout(
+		&GitlabCheckoutOptions{
+			User:            "codeship",
+			Repository:      "banana",
+			Branch:          "master",
+			CommitID:        testBananaCommitID,
+			SecurityOptions: NewGitlabSecurityOptionsSSH(getSSHOptions()),
+		},
+		tempDir,
+	); err != nil {
+		t.Fatal(err)
+	}
+	testBananaCheckoutTarball(t, tempDir)
+}
+
+func testBananaCheckoutTarball(t *testing.T, tempDir string) {
+	if _, err := os.Stat(filepath.Join(tempDir, "README.md")); err != nil {
+		t.Error(err)
+	}
+	file, err := os.Open(filepath.Join(tempDir, ".git/HEAD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commitID := strings.TrimSpace(string(data))
+	if testBananaCommitID != commitID {
+		t.Errorf("expected %s, got %s", testBananaCommitID, commitID)
 	}
 }
 
