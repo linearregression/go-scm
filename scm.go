@@ -817,7 +817,8 @@ func getBitbucketHgURL(bitbucketHgCheckoutOptions *BitbucketHgCheckoutOptions) (
 
 func getGitlabURL(gitlabCheckoutOptions *GitlabCheckoutOptions) (string, error) {
 	if gitlabCheckoutOptions.SecurityOptions == nil {
-		return getGitReadOnlyURL(
+		return getSSHURL(
+			"ssh://",
 			"git",
 			"gitlab.com",
 			joinStrings("/", gitlabCheckoutOptions.User, "/", gitlabCheckoutOptions.Repository, ".git"),
@@ -829,13 +830,6 @@ func getGitlabURL(gitlabCheckoutOptions *GitlabCheckoutOptions) (string, error) 
 			"git",
 			"gitlab.com",
 			joinStrings(":", gitlabCheckoutOptions.User, "/", gitlabCheckoutOptions.Repository, ".git"),
-		), nil
-	}
-	if gitlabCheckoutOptions.SecurityOptions.Type() == SecurityOptionsTypeAccessToken {
-		return getAccessTokenURL(
-			(gitlabCheckoutOptions.SecurityOptions.(*AccessTokenSecurityOptions)).AccessToken,
-			"gitlab.com",
-			joinStrings("/", gitlabCheckoutOptions.User, "/", gitlabCheckoutOptions.Repository, ".git"),
 		), nil
 	}
 	return "", errorSecurityNotImplementedForCheckoutOptionsType
